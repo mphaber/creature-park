@@ -1170,6 +1170,119 @@
         .star-badge.tier-5 { animation: none; }
         .park-ball.act-frisbee.flying::before { animation: none; opacity: 0; }
       }
+
+      /* ---------- Polish pass: pressable buttons, tidier type ----------
+         Presentation only: no layout, content, or game behavior changes.
+         Filled actions get a chunky bottom edge that compresses when
+         pressed; outlined actions get a soft lifted edge so they read as
+         tappable too. Hover lifts apply only where a real pointer can
+         hover, so nothing sticks on the kids' touch screens. */
+      body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+      h1, h2, h3, .qtext, .set-head, .gift-card h3, .adult-card h3 { text-wrap: balance; }
+      ::selection { background: rgba(246, 183, 60, 0.45); }
+      .wallet, .stat .num, .price, .pet-xp, .streak-pill { font-variant-numeric: tabular-nums; }
+      .subtitle { line-height: 1.3; }
+      .screen-sub, .profile-note { line-height: 1.5; }
+      .creature .blurb { line-height: 1.45; }
+      .btn { transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease; }
+      .tab, .shop-tab, .place-chip, .music-btn, .grown-btn, .grade-btn,
+      .answer-btn, .buy-btn, .speak-q, .count-pip, .creature, .profile-chip,
+      .hub-menu button {
+        transition: transform 0.13s ease, box-shadow 0.13s ease,
+          background-color 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
+      }
+
+      /* Primary actions: a bright top sheen and a pressable bottom edge. */
+      .btn-play {
+        background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0) 55%);
+        box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 8px 0 var(--accent-dark), var(--shadow);
+      }
+      .btn-play:active { transform: translateY(5px); box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.35), 0 3px 0 var(--accent-dark), var(--shadow); }
+      .buy-btn {
+        background-image: linear-gradient(180deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0) 55%);
+        box-shadow: 0 5px 0 var(--accent-dark), 0 8px 16px rgba(90, 50, 80, 0.14);
+      }
+      .buy-btn:active { transform: translateY(3px); box-shadow: 0 2px 0 var(--accent-dark), 0 4px 8px rgba(90, 50, 80, 0.12); }
+      /* Quiet states (owned, cannot afford, taken, done, disabled) stay
+         flat, with only a slim neutral edge. */
+      .buy-btn.owned, .buy-btn.cant, .buy-btn.taken, .buy-btn.done,
+      .buy-btn.soft, .buy-btn[disabled] {
+        background-image: none; box-shadow: 0 3px 0 var(--card-border);
+      }
+      .buy-btn.owned:active, .buy-btn.cant:active, .buy-btn.taken:active,
+      .buy-btn.done:active, .buy-btn[disabled]:active { transform: none; }
+      /* The same buttons in small rows get a slimmer edge to match. */
+      .stable-actions .buy-btn, .care-actions .buy-btn, .acc-actions .buy-btn,
+      .voice-card .buy-btn, .adult-card .buy-btn, .gift-banner .buy-btn {
+        box-shadow: 0 3px 0 var(--card-border);
+      }
+      .stable-actions .buy-btn:not([disabled]):active, .care-actions .buy-btn:not(.done):active,
+      .acc-actions .buy-btn:active, .voice-card .buy-btn:active,
+      .adult-card .buy-btn:active, .gift-banner .buy-btn:active {
+        transform: translateY(2px); box-shadow: 0 1px 0 var(--card-border);
+      }
+
+      /* Secondary actions: outlined buttons lift off the page a little,
+         so they read as buttons instead of labels. */
+      .btn-back { background: var(--card-bg); box-shadow: 0 4px 0 var(--card-border), var(--shadow); }
+      .btn-back:active { transform: translateY(3px); box-shadow: 0 1px 0 var(--card-border), var(--shadow); }
+      .grown-btn { background: var(--card-bg); box-shadow: 0 3px 0 var(--card-border), var(--shadow); }
+      .grown-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--card-border); }
+      .speak-q { background: var(--card-bg); box-shadow: 0 3px 0 var(--card-border); }
+      .speak-q:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--card-border); }
+      .speak-q.speak-big { box-shadow: 0 4px 0 var(--accent); }
+      .speak-q.speak-big:active { box-shadow: 0 1px 0 var(--accent); }
+
+      /* Tabs and chips: a slim bottom edge; the active one sits proud. */
+      .tab { box-shadow: 0 3px 0 var(--card-border); }
+      .tab:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--card-border); }
+      .tab.active { box-shadow: 0 4px 0 var(--accent-dark), var(--shadow); }
+      .tab.active:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--accent-dark), var(--shadow); }
+      .tab.tab-main { box-shadow: 0 4px 0 var(--sun), var(--shadow); }
+      .tab.tab-main:active { transform: translateY(2px); box-shadow: 0 2px 0 var(--sun), var(--shadow); }
+      .tab.tab-main.active { box-shadow: 0 4px 0 var(--accent-dark), var(--shadow-big); }
+      .shop-tab { box-shadow: 0 3px 0 var(--card-border); }
+      .shop-tab:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--card-border); }
+      .shop-tab.active { box-shadow: 0 4px 0 var(--accent-dark), var(--shadow); }
+      .place-chip { box-shadow: 0 3px 0 var(--card-border); }
+      .place-chip:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--card-border); }
+      .place-chip.active { box-shadow: 0 3px 0 var(--accent-dark); }
+      .music-btn { box-shadow: 0 3px 0 var(--sun); }
+      .music-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--sun); }
+      .music-btn.off { box-shadow: 0 3px 0 var(--card-border); }
+      .grade-btn { box-shadow: 0 3px 0 var(--card-border); }
+      .grade-btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--card-border); }
+      .grade-btn.on:active { box-shadow: 0 1px 0 var(--demo-dark); }
+      .hub-menu button:active { transform: scale(0.97); }
+
+      /* Answer buttons: chunky and game-like, with room to press down. */
+      .answer-btn { box-shadow: 0 6px 0 var(--accent); }
+      .answer-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 var(--accent); }
+      .answer-btn.right { box-shadow: 0 6px 0 var(--accent-dark); }
+      .answer-btn.right:active { box-shadow: 0 2px 0 var(--accent-dark); }
+      .answer-btn.tried { box-shadow: 0 2px 0 var(--accent); }
+      .count-pip { box-shadow: 0 3px 0 var(--card-border); }
+      .count-pip:active { box-shadow: 0 1px 0 var(--card-border); }
+
+      /* Gentle lifts for real pointers only (mouse/trackpad), never touch. */
+      @media (hover: hover) and (pointer: fine) {
+        .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-big); }
+        .card.selected:hover { transform: translateY(-8px); }
+        .creature:hover { transform: translateY(-3px); box-shadow: var(--shadow-big); }
+        .btn-play:hover, .buy-btn:hover { filter: brightness(1.05); }
+        .tab:hover, .shop-tab:hover, .place-chip:hover, .grade-btn:hover { border-color: var(--accent); }
+        .tab.active:hover, .shop-tab.active:hover, .place-chip.active:hover { border-color: var(--accent-dark); }
+        .answer-btn:not(.right):hover { background: var(--accent-soft); }
+        .speak-q:hover { border-color: var(--accent); }
+        .profile-chip:hover { background: var(--bg-soft); }
+        .hub-menu button:hover { background: var(--bg-soft); }
+        .grown-btn:hover { color: var(--ink); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .tab, .shop-tab, .place-chip, .music-btn, .grown-btn, .grade-btn,
+        .answer-btn, .buy-btn, .speak-q, .count-pip, .creature, .profile-chip,
+        .hub-menu button { transition: none; }
+      }
     </style>
   </head>
   <body>
