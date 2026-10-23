@@ -2179,6 +2179,8 @@ var NARRATION_CLIPS = [
           clipCount: NARRATION_CLIPS.length,
           has: function (k) { return !!CLIP_SRC[k]; },
           resolve: function (t) {
+            var whole = resolveChunkClips(t);
+            if (whole) return [{ text: String(t), clips: whole }];
             return buildSpeechChunks(t).map(function (c) { return { text: c.text, clips: resolveChunkClips(c.text) }; });
           },
           durations: function () { return CLIP_DUR; }
@@ -2199,10 +2201,20 @@ var NARRATION_CLIPS = [
             var isHudson = (typeof selected !== "undefined" && selected === "hudson");
             var rate = isHudson ? 0.88 : 0.93;
             var pitch = 1.1;
-            var chunks = buildSpeechChunks(text);
-            var plan = chunks.map(function (c) {
-              return { text: c.text, gapAfter: c.gapAfter, clips: resolveChunkClips(c.text) };
-            });
+            /* Check the whole line for a recording BEFORE splitting it
+               into sentences: the clip index is keyed by full lines, so a
+               two-sentence line like "I am a dinosaur! Roar!" only matches
+               whole. Splitting first stranded those lines (three of
+               Hudson's park lines, one of Hazel's) on the device voice. */
+            var wholeClips = resolveChunkClips(text);
+            var plan;
+            if (wholeClips) {
+              plan = [{ text: String(text), gapAfter: 0, clips: wholeClips }];
+            } else {
+              plan = buildSpeechChunks(text).map(function (c) {
+                return { text: c.text, gapAfter: c.gapAfter, clips: resolveChunkClips(c.text) };
+              });
+            }
             var usedClips = [], recChunks = 0, estMs = 0;
             plan.forEach(function (p, ix) {
               if (p.clips) {
