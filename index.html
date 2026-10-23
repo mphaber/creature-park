@@ -975,6 +975,39 @@
       .stable-note { font-size: 0.88rem; font-weight: 600; color: var(--ink-soft); margin: 2px 0 0; width: 100%; }
       .fav-star { display: inline-flex; vertical-align: -2px; margin-right: 4px; color: #e8a020; }
       .fav-star svg { width: 13px; height: 13px; }
+      /* Pet Levels: caring and playing earn Bond XP, and each level adds
+         a more magical glow around that creature in the book and Hangout. */
+      .pet-level-badge {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        align-self: center; padding: 4px 13px; border-radius: 999px;
+        background: #fff3d6; color: #7a4d05; border: 2px solid var(--sun);
+        font-family: "Baloo 2", "Nunito", sans-serif; font-weight: 800; font-size: 0.94rem; line-height: 1.2;
+      }
+      .pet-level-badge svg { width: 17px; height: 17px; flex: none; }
+      .pet-level-badge.max { box-shadow: 0 0 10px rgba(246, 183, 60, 0.65), 0 0 16px rgba(183, 156, 255, 0.45); }
+      .pet-bond { margin: 2px 0 10px; padding: 10px 0 2px; border-top: 2px dashed var(--card-border); text-align: center; }
+      .pet-bond-head { display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; }
+      .pet-xp { font-family: "Baloo 2", "Nunito", sans-serif; font-weight: 800; font-size: 1rem; color: var(--ink-soft); }
+      .pet-bond .progressbar { height: 14px; margin: 8px 0 4px; }
+      .pet-bond-note { font-size: 0.92rem; font-weight: 700; color: var(--ink-soft); margin: 2px 0 0; }
+      .care-actions { display: flex; gap: 7px; flex-wrap: wrap; justify-content: center; margin-top: 9px; }
+      .care-actions .buy-btn { min-height: 44px; font-size: 0.94rem; padding: 6px 12px; }
+      .care-actions .buy-btn.done { background: var(--accent-soft); color: var(--accent-dark); cursor: default; }
+      .care-msg { font-weight: 800; color: var(--ink); margin: 9px 0 1px; line-height: 1.35; }
+      .pet-glow { position: absolute; inset: -3px; z-index: 3; pointer-events: none; }
+      .pet-glow::before { content: ""; position: absolute; inset: 1px; border-radius: 50%; border: 3px solid transparent; }
+      .pet-glow.glow-2::before { border-color: rgba(246, 183, 60, 0.78); box-shadow: 0 0 10px rgba(246, 183, 60, 0.5); }
+      .pet-glow.glow-3::before { border-color: rgba(87, 171, 97, 0.82); box-shadow: 0 0 12px rgba(127, 214, 174, 0.6), inset 0 0 10px rgba(246, 183, 60, 0.35); }
+      .pet-glow.glow-4::before { border-color: rgba(139, 79, 196, 0.86); box-shadow: 0 0 14px rgba(183, 156, 255, 0.68), 0 0 20px rgba(246, 183, 60, 0.38); }
+      .pet-glow.glow-5::before { border-color: #f6b73c; box-shadow: 0 0 0 3px rgba(247, 158, 192, 0.55), 0 0 18px rgba(246, 183, 60, 0.78), 0 0 27px rgba(127, 214, 174, 0.52); }
+      .art-stage.pet-level-4 > svg, .park-art.pet-level-4 > svg { filter: saturate(1.12) drop-shadow(0 0 5px rgba(183, 156, 255, 0.45)); }
+      .art-stage.pet-level-5 > svg, .park-art.pet-level-5 > svg { filter: saturate(1.22) drop-shadow(0 0 7px rgba(246, 183, 60, 0.55)); }
+      .pet-spark { position: absolute; width: 18px; height: 18px; color: #f6b73c; animation: floaty 3.2s ease-in-out infinite; }
+      .pet-spark svg { width: 100%; height: 100%; display: block; }
+      .pet-spark.sp-0 { right: 0; top: 2%; }
+      .pet-spark.sp-1 { left: 0; top: 18%; color: #57ab61; animation-delay: 0.7s; }
+      .pet-spark.sp-2 { right: 7%; bottom: 3%; color: #e14b73; animation-delay: 1.3s; }
+      .park-level { display: inline-block; margin-left: 5px; padding: 1px 7px; border-radius: 999px; background: var(--sun); color: #5b3a05; font-size: 0.72rem; vertical-align: 1px; }
       /* Activity projectiles and scene extras in the Hangout. */
       /* The frisbee: a raspberry disc with a pale rim, drawn flat like
          the real thing. Its old tan gradient read as a loaf of bread,
@@ -1131,7 +1164,7 @@
       @media (prefers-reduced-motion: reduce) {
         .card, .btn, .panel.show, .confirmed.show, .sparkle,
         .park-actor, .park-actor.arriving, .park-kid, .park-ball, .park-butterfly, .park-float,
-        .park-kite, .park-comet, .park-bubble-fx { animation: none; transition: none; }
+        .park-kite, .park-comet, .park-bubble-fx, .pet-spark { animation: none; transition: none; }
         .park-castle { transition: none; }
         .park-bubble { transition: none; }
         .star-badge.tier-5 { animation: none; }
@@ -1256,7 +1289,8 @@
               { icon: "book", text: "Reading adventures with real stories to follow" },
               { icon: "times", text: "Multiplication quests and number challenges" },
               { icon: "pencil", text: "Word problems and spelling practice" },
-              { icon: "puzzle", text: "Logic puzzles, longer quests, and collectibles" }
+              { icon: "puzzle", text: "Logic puzzles, longer quests, and collectibles" },
+              { icon: "book", text: "Space, science, and nature & animal questions in every round" }
             ],
             note: "Hazel reads everything herself, so her game skips the narration and goes straight to the good stuff."
           },
@@ -3301,6 +3335,77 @@ var NARRATION_CLIPS = [
           if (!s || !s.placed) return 0;
           return Object.keys(s.placed).filter(function (cid) { return s.placed[cid] === placeId && s.owned.indexOf(cid) !== -1; }).length;
         }
+
+        /* ---------- Pet Levels: Bond XP earned by care and play ----------
+           Every creature has its OWN level, separate from the player's
+           Challenge Level and Star Level. Its Bond XP lives in the
+           owner's save (s.petXp, creature id -> XP) so it survives
+           reloads and rides along in transfer codes. Care in the
+           Collection book and active play in the Hangout earn XP; each
+           new level adds a stronger magical glow around the creature. */
+        var PET_LEVEL_THRESHOLDS = [0, 12, 30, 55, 90];
+        var PET_LEVEL_NAMES = ["New friend", "Happy friend", "Shiny friend", "Superstar friend", "Rainbow legend"];
+        var PET_CARE_ACTIONS = {
+          pat: { xp: 2, label: "Pat", done: "Patted", line: "A gentle pat and a happy wiggle." },
+          snack: { xp: 3, label: "Give a snack", done: "Snack shared", line: "Crunch, munch - snack time is the best time." },
+          brush: { xp: 3, label: "Brush", done: "Brushed", line: "Brush, brush - all smooth and shiny." }
+        };
+        var petCareDone = {};   /* one of each care treat per creature per visit */
+        var petCareMsg = "";
+        var petCareMsgFor = null;
+        var petTapXpAt = {};    /* creature id -> last tapped-for-XP time */
+        var rallyBondAwarded = {}; /* one rally-catch XP per creature per visit */
+        function petXpFor(s, cid) {
+          if (!s || !s.petXp || typeof s.petXp[cid] !== "number" || !(s.petXp[cid] > 0)) return 0;
+          return Math.floor(s.petXp[cid]);
+        }
+        function petLevelInfo(xp) {
+          xp = Math.max(0, Math.floor(xp || 0));
+          var lvl = 1;
+          for (var i = 0; i < PET_LEVEL_THRESHOLDS.length; i++) if (xp >= PET_LEVEL_THRESHOLDS[i]) lvl = i + 1;
+          var max = lvl >= PET_LEVEL_THRESHOLDS.length;
+          var cur = PET_LEVEL_THRESHOLDS[lvl - 1];
+          var next = max ? cur : PET_LEVEL_THRESHOLDS[lvl];
+          return { level: lvl, xp: xp, cur: cur, next: next, into: xp - cur, span: max ? 1 : next - cur, left: max ? 0 : next - xp, max: max };
+        }
+        function petLevelFor(s, cid) { return petLevelInfo(petXpFor(s, cid)).level; }
+        function petOwnerKey(cid) {
+          var owner = (typeof creatureOwner === "function") ? creatureOwner(cid) : null;
+          return owner || (demoCreatureById(cid) ? "demo" : null);
+        }
+        function petLevelBadgeHTML(s, cid) {
+          var info = petLevelInfo(petXpFor(s, cid));
+          return '<span class="pet-level-badge' + (info.max ? " max" : "") + '">' + STAR_SVG + "<span>Pet Level " + info.level + " · " + PET_LEVEL_NAMES[info.level - 1] + "</span></span>";
+        }
+        function petGlowHTML(level) {
+          if (!level || level < 2) return "";
+          var count = level >= 5 ? 3 : level >= 3 ? 2 : 1;
+          var sparks = "";
+          for (var i = 0; i < count; i++) sparks += '<span class="pet-spark sp-' + i + '">' + STAR_SVG + "</span>";
+          return '<span class="pet-glow glow-' + level + '" aria-hidden="true">' + sparks + "</span>";
+        }
+        function petStageClass(s, cid) { return " pet-level-" + petLevelFor(s, cid); }
+        function awardPetXp(ownerKey, cid, amount) {
+          if (!ownerKey || !cid || !(amount > 0)) return null;
+          var os = (ownerKey === selected) ? ensureSave(ownerKey) : peekSave(ownerKey);
+          if (!os || !Array.isArray(os.owned) || os.owned.indexOf(cid) === -1) return null;
+          if (!os.petXp || typeof os.petXp !== "object" || Array.isArray(os.petXp)) os.petXp = {};
+          var beforeXp = petXpFor(os, cid);
+          var before = petLevelInfo(beforeXp);
+          os.petXp[cid] = beforeXp + amount;
+          var info = petLevelInfo(os.petXp[cid]);
+          persistSave(ownerKey, os);
+          return { xp: os.petXp[cid], beforeLevel: before.level, level: info.level, info: info, leveled: info.level > before.level };
+        }
+        window.__hhPetLevels = {
+          thresholds: PET_LEVEL_THRESHOLDS.slice(),
+          names: PET_LEVEL_NAMES.slice(),
+          care: PET_CARE_ACTIONS,
+          xpFor: function (ownerKey, cid) { return petXpFor(peekSave(ownerKey), cid); },
+          levelFor: function (ownerKey, cid) { return petLevelFor(peekSave(ownerKey), cid); },
+          infoFor: function (ownerKey, cid) { return petLevelInfo(petXpFor(peekSave(ownerKey), cid)); },
+          award: function (ownerKey, cid, amount) { return awardPetXp(ownerKey, cid, amount); }
+        };
         function ensureSave(key) {
           if (saves[key]) return saves[key];
           var s = null, raw = null;
@@ -3364,6 +3469,13 @@ var NARRATION_CLIPS = [
           Object.keys(s.placed).forEach(function (cid) { if (s.owned.indexOf(cid) === -1) delete s.placed[cid]; });
           var favsClean = s.favs.filter(function (cid) { return s.owned.indexOf(cid) !== -1; });
           if (favsClean.length !== s.favs.length) { s.favs = favsClean; dirty = true; }
+          /* Pet Bond XP (see Pet Levels above): one entry per owned
+             creature, whole numbers only, nothing for strangers. */
+          if (!s.petXp || typeof s.petXp !== "object" || Array.isArray(s.petXp)) { s.petXp = {}; dirty = true; }
+          Object.keys(s.petXp).forEach(function (cid) {
+            if (s.owned.indexOf(cid) === -1 || typeof s.petXp[cid] !== "number" || !(s.petXp[cid] >= 0)) { delete s.petXp[cid]; dirty = true; }
+            else if (s.petXp[cid] !== Math.floor(s.petXp[cid])) { s.petXp[cid] = Math.floor(s.petXp[cid]); dirty = true; }
+          });
           var byPlace = {};
           Object.keys(s.placed).forEach(function (cid) { (byPlace[s.placed[cid]] = byPlace[s.placed[cid]] || []).push(cid); });
           Object.keys(byPlace).forEach(function (pid) {
@@ -3466,6 +3578,7 @@ var NARRATION_CLIPS = [
             var loser = loserKey === "hazel" ? hs : us;
             loser.owned = loser.owned.filter(function (x) { return x !== c.id; });
             if (typeof loser.coins === "number") loser.coins += priceFor(c);
+            if (loser.petXp && typeof loser.petXp === "object") delete loser.petXp[c.id];
             unequipPetsFrom(loser, c.id);
             if (loserKey === "hazel") changedH = true; else changedU = true;
           });
@@ -3713,6 +3826,22 @@ var NARRATION_CLIPS = [
           var cat = (typeof selected !== "undefined" && selected === "demo") ? DEMO_CREATURES : CREATURES;
           return cat.filter(function (c) { return s.owned.indexOf(c.id) !== -1; }).length;
         }
+        function petBondSummaryHTML(s) {
+          if (!s.owned.length) {
+            return '<div class="momentum-card"><p class="momentum-line">' + SPARK_TINY + '<span><strong>Pet Levels</strong></span></p>' +
+              '<p class="momentum-line"><span>Collect a creature, then care for it in the Collection book and play with it in the Hangout. It earns Bond XP, levels up, and grows a cooler glow!</span></p></div>';
+          }
+          var total = 0, topC = null, topXp = -1;
+          s.owned.forEach(function (cid) {
+            var xp = petXpFor(s, cid);
+            total += xp;
+            if (xp > topXp) { topXp = xp; topC = creatureById(cid); }
+          });
+          var topInfo = petLevelInfo(topXp < 0 ? 0 : topXp);
+          return '<div class="momentum-card"><p class="momentum-line">' + SPARK_TINY + '<span><strong>Pet Levels</strong> · ' + total + ' total Bond XP</span></p>' +
+            '<p class="momentum-line"><span>' + (topC ? topC.name + " is your top friend: <strong>Pet Level " + topInfo.level + " · " + PET_LEVEL_NAMES[topInfo.level - 1] + "</strong>" : "") + '</span></p>' +
+            '<p class="momentum-line"><span>Pat, snack and brush in the Collection book, and tap and play in the Hangout, to level them up.</span></p></div>';
+        }
         function renderProfile() {
           var p = PLAYERS[selected];
           var s = ensureSave(selected);
@@ -3751,7 +3880,7 @@ var NARRATION_CLIPS = [
             (selected === "demo"
               ? '<p style="text-align:center;margin:14px 0 0"><span class="level-pill">' + demoGradeConf().label + " challenge</span></p>" +
                 gradePickerHTML() +
-                '<p class="profile-note" style="text-align:center">Questions are matched to the grade you pick: counting, letters and pictures for Kindergarten and 1st Grade, then school maths, words and science that climb from 2nd to 5th. Your next round uses the grade shown.</p>'
+                '<p class="profile-note" style="text-align:center">Questions are matched to the grade you pick: counting, letters and pictures for Kindergarten and 1st Grade, then school maths, words, space, science and nature questions that climb from 2nd to 5th. Your next round uses the grade shown.</p>'
               : '<p style="text-align:center;margin:14px 0 0"><span class="level-pill">Challenge Level ' + s.level + "</span></p>" +
                 '<p class="profile-note" style="text-align:center">Finish a Learn &amp; Earn round to raise your Challenge Level. Higher levels mean trickier questions and bigger round bonuses.</p>') +
             '<div class="momentum-card">' +
@@ -3764,6 +3893,7 @@ var NARRATION_CLIPS = [
               '<div class="progressbar"><div style="width:' + spPct + '%"></div></div>' +
               '<p class="momentum-line"><span>' + sp.left + " more question" + (sp.left === 1 ? "" : "s") + " to Star Level " + (sp.level + 1) + "</span></p>" +
             "</div>" +
+            petBondSummaryHTML(s) +
             '<h3 class="set-head">My progress</h3>' +
             '<div class="stats">' +
               '<div class="stat"><div class="num">' + s.questionsAnswered + '</div><div class="lbl">Questions answered</div></div>' +
@@ -4044,8 +4174,11 @@ var NARRATION_CLIPS = [
         }
 
         function hazelPlan(L) {
-          var nonMathKinds = ["vocab", "spelling", "grammar", "reading", "science"];
           var plan = [];
+          /* Hazel asked for space, science and nature/animal questions,
+             so every round carries one "wonder" slot drawn from those
+             three kinds - guaranteed, not left to chance. */
+          plan.push(pickOf(["space", "science", "nature"]));
           /* School-unit anchor (Levels 1-3 especially): one compare/place-value
              question and one addition/standard-form question in every round. */
           plan.push(pickOf(["compare", "place-value"]));
@@ -4058,23 +4191,26 @@ var NARRATION_CLIPS = [
           } else {
             plan.push(pickOf(["division", "estimation", "mult", "word", "fraction-compare", "fraction-of", "word2", "sequence", "compare", "place-value", "money", "time", "missing", "multiples", "perimeter", "fraction-add"]));
           }
-          /* Non-maths: at least 1 per round, about half of rounds get 2. */
-          var wantNonMath = Math.random() < 0.5 ? 2 : 1;
-          var nmPool = shuffled(nonMathKinds);
-          for (var ni = 0; ni < wantNonMath; ni++) plan.push(nmPool[ni]);
-          /* Fill any remaining slot with maths, school-weighted at low levels,
-             while keeping multiplication (mult + mult word problems) to at most 2. */
-          var fillLow = ["addition", "standard-form", "compare", "place-value", "division", "estimation", "mult", "word", "money", "missing", "multiples"];
-          var fillHigh = ["addition", "standard-form", "compare", "place-value", "division", "estimation", "mult", "word", "fraction-compare", "fraction-of", "word2", "sequence", "money", "time", "missing", "multiples", "perimeter", "fraction-add"];
-          var fillPool = L <= 3 ? fillLow : fillHigh;
-          var guard = 0;
-          while (plan.length < 5 && guard++ < 60) {
-            var cand = pickOf(fillPool);
-            if ((cand === "mult" || cand === "word") &&
-                plan.filter(function (x) { return x === "mult" || x === "word"; }).length >= 2) continue;
-            plan.push(cand);
+          /* The fifth slot: about half of rounds get a language question
+             (vocab, spelling, grammar or reading), the rest get one more
+             maths question, school-weighted at low levels and keeping
+             multiplication (mult + mult word problems) to at most 2. */
+          if (Math.random() < 0.5) {
+            plan.push(pickOf(["vocab", "spelling", "grammar", "reading"]));
+          } else {
+            var fillLow = ["addition", "standard-form", "compare", "place-value", "division", "estimation", "mult", "word", "money", "missing", "multiples"];
+            var fillHigh = ["addition", "standard-form", "compare", "place-value", "division", "estimation", "mult", "word", "fraction-compare", "fraction-of", "word2", "sequence", "money", "time", "missing", "multiples", "perimeter", "fraction-add"];
+            var fillPool = L <= 3 ? fillLow : fillHigh;
+            var cand5 = null, guard = 0;
+            while (guard++ < 60) {
+              var cand = pickOf(fillPool);
+              if ((cand === "mult" || cand === "word") &&
+                  plan.filter(function (x) { return x === "mult" || x === "word"; }).length >= 2) continue;
+              cand5 = cand;
+              break;
+            }
+            plan.push(cand5 || pickOf(["addition", "compare", "place-value", "division", "estimation"]));
           }
-          while (plan.length < 5) plan.push(pickOf(["addition", "compare", "place-value", "division", "estimation"]));
           return shuffled(plan.slice(0, 5));
         }
         function fmtNum(n) {
@@ -4218,27 +4354,64 @@ var NARRATION_CLIPS = [
           { p: "Bees tell the other bees where to find flowers by dancing in a special pattern called a waggle dance.", q: "How do bees share where the flowers are?", a: "By dancing a waggle dance", d: ["By buzzing louder", "By leaving a trail"] },
           { p: "The night train left the city at nine o'clock. Rosa watched the windows glow as it crossed the dark fields toward the mountains.", q: "What time did the train leave?", a: "Nine o'clock", d: ["Eight o'clock", "Midnight"] }
         ];
-        var SCIENCE_BANK = [
+        /* Hazel's wonder banks: Space, general Science, and Nature &
+           Animals. hazelPlan guarantees one of these three kinds in
+           every round, and each shows its own category label. */
+        var SPACE_BANK = [
           { q: "Which planet is known as the Red Planet?", a: "Mars", d: ["Venus", "Jupiter"] },
-          { q: "What is the capital of Massachusetts?", a: "Boston", d: ["Salem", "Cambridge"] },
-          { q: "Which ocean is next to Massachusetts?", a: "The Atlantic Ocean", d: ["The Pacific Ocean", "The Indian Ocean"] },
+          { q: "Which planet is closest to the Sun?", a: "Mercury", d: ["Earth", "Mars"] },
+          { q: "What is the largest planet in our solar system?", a: "Jupiter", d: ["Saturn", "Neptune"] },
+          { q: "Which planet is best known for its wide, bright rings?", a: "Saturn", d: ["Mars", "Venus"] },
+          { q: "Which star is closest to Earth?", a: "The Sun", d: ["The North Star", "The Moon"] },
+          { q: "What does the Earth orbit (travel around)?", a: "The Sun", d: ["The Moon", "Mars"] },
+          { q: "How long does Earth take to travel once around the Sun?", a: "One year", d: ["One day", "One month"] },
+          { q: "Why can we see the Moon shining at night?", a: "It reflects light from the Sun", d: ["It makes its own light", "It reflects light from Mars"] },
+          { q: "Why does the Moon seem to change shape during the month?", a: "We see different parts of its sunlit side", d: ["The Moon really changes shape", "Clouds cover different parts of it"] },
+          { q: "What carries astronauts into space?", a: "A rocket", d: ["A submarine", "A hot-air balloon"] },
+          { q: "What is a telescope used for?", a: "Seeing faraway stars and planets", d: ["Listening to whales", "Digging for fossils"] },
+          { q: "How many planets are in our solar system?", a: "Eight", d: ["Seven", "Nine"] },
+          { q: "How is gravity on the Moon different from gravity on Earth?", a: "It is weaker, so astronauts can jump higher", d: ["It is much stronger", "There is no gravity on the Moon at all"] },
+          { q: "What causes day and night on Earth?", a: "Earth spinning on its axis", d: ["The Sun moving around Earth", "The Moon covering the Sun every night"] },
+          { q: "A shooting star is really which of these?", a: "A meteor burning up in the air", d: ["A star falling to the ground", "A comet landing on Earth"] },
+          { q: "The Milky Way is which of these?", a: "The galaxy Earth belongs to", d: ["A planet with rings", "A group of seven stars"] }
+        ];
+        var SCIENCE_BANK = [
           { q: "When water freezes, it turns into which state of matter?", a: "A solid", d: ["A gas", "A liquid"] },
           { q: "In the water cycle, what is it called when water vapour turns back into liquid and forms clouds?", a: "Condensation", d: ["Evaporation", "Melting"] },
-          { q: "Which animal is a mammal?", a: "A dolphin", d: ["A shark", "A penguin"] },
-          { q: "How many continents are there on Earth?", a: "Seven", d: ["Five", "Ten"] },
-          { q: "Which planet is closest to the Sun?", a: "Mercury", d: ["Earth", "Mars"] },
-          { q: "What do bees collect from flowers to make honey?", a: "Nectar", d: ["Pollen dust only", "Rainwater"] },
           { q: "Which of these is a gas?", a: "Steam", d: ["Ice", "A puddle"] },
-          { q: "What is the largest ocean on Earth?", a: "The Pacific Ocean", d: ["The Atlantic Ocean", "The Arctic Ocean"] },
-          { q: "A tadpole grows up to become which animal?", a: "A frog", d: ["A fish", "A turtle"] },
           { q: "Which force pulls objects toward the Earth?", a: "Gravity", d: ["Magnetism", "Friction"] },
-          { q: "What is the largest planet in our solar system?", a: "Jupiter", d: ["Saturn", "Neptune"] },
-          { q: "Which part of a plant takes in water from the soil?", a: "The roots", d: ["The petals", "The leaves"] },
-          { q: "How many legs does an insect have?", a: "Six", d: ["Eight", "Four"] },
-          { q: "What gas do plants take in from the air?", a: "Carbon dioxide", d: ["Oxygen", "Helium"] },
+          { q: "How many continents are there on Earth?", a: "Seven", d: ["Five", "Ten"] },
+          { q: "Which ocean is next to Massachusetts?", a: "The Atlantic Ocean", d: ["The Pacific Ocean", "The Indian Ocean"] },
+          { q: "What is the largest ocean on Earth?", a: "The Pacific Ocean", d: ["The Atlantic Ocean", "The Arctic Ocean"] },
+          { q: "Which is the largest hot desert in the world?", a: "The Sahara", d: ["The Gobi", "The Mojave"] },
+          { q: "What tool do we use to measure temperature?", a: "A thermometer", d: ["A ruler", "A rain gauge"] },
+          { q: "What tool measures how much rain has fallen?", a: "A rain gauge", d: ["A thermometer", "A compass"] },
+          { q: "Which material lets electricity flow through it easily?", a: "A copper wire", d: ["A rubber glove", "A wooden stick"] },
+          { q: "Friction is a force that does what?", a: "Slows moving things down and can make heat", d: ["Makes things float", "Makes sounds louder"] },
+          { q: "Which of these is a simple machine?", a: "A lever", d: ["A battery", "A magnet"] },
+          { q: "What will a magnet attract?", a: "An iron nail", d: ["A wooden bead", "A plastic cup"] },
+          { q: "Which layer of the Earth do we live on?", a: "The crust", d: ["The core", "The mantle"] },
+          { q: "What happens to most materials when they are heated?", a: "They expand (get a little bigger)", d: ["They always melt", "They turn into gas"] }
+        ];
+        var NATURE_BANK = [
+          { q: "Which animal is a mammal?", a: "A dolphin", d: ["A shark", "A penguin"] },
+          { q: "A tadpole grows up to become which animal?", a: "A frog", d: ["A fish", "A turtle"] },
           { q: "Which animal has eight legs and spins a web?", a: "A spider", d: ["An ant", "A beetle"] },
+          { q: "How many legs does an insect have?", a: "Six", d: ["Eight", "Four"] },
+          { q: "What do bees collect from flowers to make honey?", a: "Nectar", d: ["Pollen dust only", "Rainwater"] },
+          { q: "When bees carry pollen from flower to flower, what does it help the flowers do?", a: "Make seeds and new plants", d: ["Change colour", "Grow taller overnight"] },
           { q: "What is it called when a caterpillar changes into a butterfly?", a: "Metamorphosis", d: ["Hibernation", "Migration"] },
-          { q: "Which is the largest hot desert in the world?", a: "The Sahara", d: ["The Gobi", "The Mojave"] }
+          { q: "Which part of a plant takes in water from the soil?", a: "The roots", d: ["The petals", "The leaves"] },
+          { q: "What gas do plants take in from the air?", a: "Carbon dioxide", d: ["Oxygen", "Helium"] },
+          { q: "Photosynthesis is how plants do what?", a: "Make their own food using sunlight", d: ["Sleep through the winter", "Attract bees with songs"] },
+          { q: "What do we call an animal that eats only plants?", a: "A herbivore", d: ["A carnivore", "A predator"] },
+          { q: "In a food chain, what do we call an animal that hunts other animals?", a: "A predator", d: ["Prey", "A herbivore"] },
+          { q: "Which mammal is the only one that can truly fly?", a: "A bat", d: ["A flying squirrel", "A sugar glider"] },
+          { q: "Which of these birds cannot fly?", a: "A penguin", d: ["An eagle", "A sparrow"] },
+          { q: "An owl is nocturnal. What does that mean?", a: "It is awake and hunts at night", d: ["It sleeps all winter", "It only eats plants"] },
+          { q: "Why do many birds migrate (fly south) in autumn?", a: "To find warmer weather and food", d: ["To visit the ocean", "To build nests in the snow"] },
+          { q: "Why does a snowshoe hare's fur turn white in winter?", a: "To blend in with the snow", d: ["To stay cooler", "To scare away foxes"] },
+          { q: "What is it called when a bear sleeps through the whole winter?", a: "Hibernation", d: ["Migration", "Metamorphosis"] }
         ];
         function makeHazelQuestion(kind, L) {
           L = L || 1;
@@ -4395,9 +4568,11 @@ var NARRATION_CLIPS = [
             var rd = pickOf(READING_BANK);
             return { kind: "reading", category: "Reading", answer: rd.a, text: rd.q, spoken: rd.q, visual: '<div class="q-passage">' + rd.p + "</div>", options: strOpts(rd.a, rd.d) };
           }
-          if (kind === "science") {
-            var sc = pickOf(SCIENCE_BANK);
-            return { kind: "science", category: "Science & World", answer: sc.a, text: sc.q, spoken: sc.q, options: strOpts(sc.a, sc.d) };
+          if (kind === "science" || kind === "space" || kind === "nature") {
+            var wBank = kind === "space" ? SPACE_BANK : kind === "nature" ? NATURE_BANK : SCIENCE_BANK;
+            var wCat = kind === "space" ? "Space" : kind === "nature" ? "Nature & Animals" : "Science";
+            var sc = pickOf(wBank);
+            return { kind: kind, category: wCat, answer: sc.a, text: sc.q, spoken: sc.q, options: strOpts(sc.a, sc.d) };
           }
           if (kind === "money") {
             if (Math.random() < 0.5) {
@@ -4592,8 +4767,9 @@ var NARRATION_CLIPS = [
           "place-value": "Place Value", "addition": "Addition", "standard-form": "Standard Form",
           "fraction-compare": "Fractions", "fraction-of": "Fractions", "sequence": "Patterns",
           "vocab": "Word Power", "spelling": "Spelling", "grammar": "Grammar",
-          "reading": "Reading", "science": "Science & World"
+          "reading": "Reading", "science": "Science", "space": "Space", "nature": "Nature & Animals"
         };
+        window.__hhWonder = { space: SPACE_BANK, science: SCIENCE_BANK, nature: NATURE_BANK, plan: hazelPlan, make: makeHazelQuestion };
         /* ---------- No-repeat question memory ----------
            Every served question gets a stable signature (its type plus its
            exact content: numbers, word, passage). Signatures are saved per
@@ -5666,6 +5842,8 @@ var NARRATION_CLIPS = [
           if (creatureOwner(id) !== null || s.coins < price) return;
           s.coins -= price;
           s.owned.push(id);
+          if (!s.petXp || typeof s.petXp !== "object" || Array.isArray(s.petXp)) s.petXp = {};
+          if (typeof s.petXp[id] !== "number") s.petXp[id] = 0;
           if (!s.ownedAt || typeof s.ownedAt !== "object" || Array.isArray(s.ownedAt)) s.ownedAt = {};
           s.ownedAt[id] = Date.now();
           /* A new friend goes out to play in the place its buyer is
@@ -5692,11 +5870,54 @@ var NARRATION_CLIPS = [
            are swapped in and out of places. Only the owner manages
            their own creatures; a sibling's card just says where that
            creature is. */
+        function petCareButtonHTML(c, kind) {
+          var a = PET_CARE_ACTIONS[kind];
+          var done = !!petCareDone[selected + ":" + c.id + ":" + kind];
+          return '<button type="button" class="buy-btn' + (done ? " done" : "") + '" data-pet-care="' + c.id + "|" + kind + '"' + (done ? " disabled" : "") + ">" +
+            (done ? a.done : a.label + " · +" + a.xp + " XP") + "</button>";
+        }
+        function petBondHTML(s, c) {
+          var info = petLevelInfo(petXpFor(s, c.id));
+          var pct = info.max ? 100 : Math.max(0, Math.min(100, Math.round((info.into / info.span) * 100)));
+          var html = '<div class="pet-bond">' +
+            '<div class="pet-bond-head">' + petLevelBadgeHTML(s, c.id) + '<span class="pet-xp">' + info.xp + " Bond XP</span></div>" +
+            (info.max
+              ? '<p class="pet-bond-note">Top level! ' + c.name + " has the full rainbow glow.</p>"
+              : '<div class="progressbar" role="progressbar" aria-label="' + c.name + " Bond XP progress" + '" aria-valuenow="' + pct + '" aria-valuemin="0" aria-valuemax="100"><div style="width:' + pct + '%"></div></div>' +
+                '<p class="pet-bond-note">' + info.left + " XP to Pet Level " + (info.level + 1) + " · " + PET_LEVEL_NAMES[info.level] + "</p>") +
+            '<div class="care-actions" aria-label="Care for ' + c.name + '">' +
+              petCareButtonHTML(c, "pat") + petCareButtonHTML(c, "snack") + petCareButtonHTML(c, "brush") +
+            "</div>" +
+            (petCareMsgFor === c.id && petCareMsg ? '<p class="care-msg" role="status">' + petCareMsg + "</p>" : "") +
+          "</div>";
+          return html;
+        }
+        function careForPet(cid, kind) {
+          var c = creatureById(cid);
+          var a = PET_CARE_ACTIONS[kind];
+          if (!c || !a) return;
+          var key = selected + ":" + cid + ":" + kind;
+          if (petCareDone[key]) return;
+          petCareDone[key] = true;
+          var res = awardPetXp(selected, cid, a.xp);
+          if (!res) return;
+          petCareMsgFor = cid;
+          petCareMsg = res.leveled
+            ? "Level up! " + c.name + " is now Pet Level " + res.level + " - " + PET_LEVEL_NAMES[res.level - 1] + "! Look at that glow!"
+            : c.name + ": " + a.line + " +" + a.xp + " Bond XP.";
+          if (kind === "pat") playSfx("pat");
+          else if (kind === "snack") playSfx("pop");
+          else playSfx("sparkle", { vol: 0.65 });
+          if (res.leveled) playSfx("sparkle");
+          renderCollection();
+          if (selected === "hudson") speak(petCareMsg);
+        }
         function stableControlsHTML(s, c) {
           var pid = s.placed ? s.placed[c.id] : null;
           var fav = (s.favs || []).indexOf(c.id) !== -1;
           var cur = placeById(s.setting);
           var html = '<div class="stable-box">' +
+            petBondHTML(s, c) +
             '<p class="stable-status">' + (pid ? "Playing in " + placeById(pid).name : "Resting in the stable") + "</p>" +
             '<div class="stable-actions">' +
               '<button type="button" class="buy-btn fav-btn' + (fav ? " on" : "") + '" data-fav="' + c.id + '" aria-pressed="' + (fav ? "true" : "false") + '">' + FAV_STAR_SVG + (fav ? "Favourite" : "Make favourite") + "</button>";
@@ -5757,13 +5978,14 @@ var NARRATION_CLIPS = [
             '<p class="screen-sub">' + ownInCatalog + " of " + catalog.length + (isDemo ? " demo friends" : " creatures") + " collected</p>" +
             '<div class="progressbar"><div style="width:' + pct + '%"></div></div>' +
             '<p class="screen-sub" style="margin-top:10px">This book is also the stable: each place has room for ' + placeCap() + " of your creatures, and everyone else rests here. Star a favourite to keep it up front where you can always see and tap it.</p>" +
+            '<p class="screen-sub" style="margin-top:8px">NEW: Pet Levels! Pat, snack and brush your creatures here, and play with them in the Hangout, to earn Bond XP. Every Pet Level makes their magical glow cooler.</p>' +
             '<div class="grid" style="margin-top:16px">';
           catalog.forEach(function (c) {
             var owned = s.owned.indexOf(c.id) !== -1;
             if (owned) {
               var pill = petAccSpans(s, c.id, false);
               html += '<article class="creature" data-speak="' + c.id + '">' +
-                '<div class="art"><span class="art-stage">' + ART[c.id] + pill + "</span></div>" +
+                '<div class="art"><span class="art-stage' + petStageClass(s, c.id) + '">' + ART[c.id] + petGlowHTML(petLevelFor(s, c.id)) + pill + "</span></div>" +
                 rarityBadge(c) +
                 "<h3>" + c.name + '</h3><p class="species">' + c.species + "</p>" +
                 '<p class="blurb">' + setLabel(c.set) + "</p>" +
@@ -5775,10 +5997,12 @@ var NARRATION_CLIPS = [
                    vanished, badged with its owner, and NOT counted in this
                    kid's own total above. */
                 var famPill = petAccSpansFor(displayPetSlots(c.id), false);
+                var famSave = peekSave(famOwner);
                 html += '<article class="creature fam" data-speak="' + c.id + '">' +
-                  '<div class="art"><span class="art-stage">' + ART[c.id] + famPill + "</span></div>" +
+                  '<div class="art"><span class="art-stage' + petStageClass(famSave, c.id) + '">' + ART[c.id] + petGlowHTML(petLevelFor(famSave, c.id)) + famPill + "</span></div>" +
                   '<span class="fam-chip ' + famOwner + '">' + PLAYERS[famOwner].name + "'s</span>" +
                   "<h3>" + c.name + '</h3><p class="species">' + c.species + "</p>" +
+                  petLevelBadgeHTML(famSave, c.id) +
                   '<p class="blurb">' + c.name + " is " + PLAYERS[famOwner].name + "'s friend. Say hi in the Hangout!</p>" +
                   '<p class="stable-status">' + stableStatusLine(famOwner, c) + "</p></article>";
               } else {
@@ -5810,7 +6034,7 @@ var NARRATION_CLIPS = [
             if (owned) {
               var pill = petAccSpans(s, c.id, false);
               cards += '<article class="creature" data-speak="' + c.id + '">' +
-                '<div class="art"><span class="art-stage">' + ART[c.id] + pill + "</span></div>" +
+                '<div class="art"><span class="art-stage' + petStageClass(s, c.id) + '">' + ART[c.id] + petGlowHTML(petLevelFor(s, c.id)) + pill + "</span></div>" +
                 rarityBadge(c) + ' <span class="event-badge">' + (ev ? ev.name : "") + "</span>" +
                 "<h3>" + c.name + '</h3><p class="species">' + c.species + "</p>" +
                 '<p class="blurb">' + c.blurb + "</p>" +
@@ -5820,10 +6044,12 @@ var NARRATION_CLIPS = [
             var famOwner = creatureOwner(c.id);
             if (famOwner) {
               var famPill = petAccSpansFor(displayPetSlots(c.id), false);
+              var famSave2 = peekSave(famOwner);
               cards += '<article class="creature fam" data-speak="' + c.id + '">' +
-                '<div class="art"><span class="art-stage">' + ART[c.id] + famPill + "</span></div>" +
+                '<div class="art"><span class="art-stage' + petStageClass(famSave2, c.id) + '">' + ART[c.id] + petGlowHTML(petLevelFor(famSave2, c.id)) + famPill + "</span></div>" +
                 '<span class="fam-chip ' + famOwner + '">' + PLAYERS[famOwner].name + "'s</span>" +
                 "<h3>" + c.name + '</h3><p class="species">' + c.species + "</p>" +
+                petLevelBadgeHTML(famSave2, c.id) +
                 '<p class="blurb">' + c.name + " is " + PLAYERS[famOwner].name + "'s friend. Say hi in the Hangout!</p>" +
                 '<p class="stable-status">' + stableStatusLine(famOwner, c) + "</p></article>";
               return;
@@ -6848,6 +7074,51 @@ var NARRATION_CLIPS = [
           if (parkHideTimer) clearTimeout(parkHideTimer);
           parkHideTimer = setTimeout(function () { bubble.classList.remove("show"); }, 2100);
         }
+        /* When a pet levels up mid-scene, repaint its glow and level
+           chip in place so the celebration is visible without tearing
+           down the scene (and the rally) for a full re-render. */
+        function refreshParkActorGlow(actor, level) {
+          if (!actor) return;
+          var art = actor.querySelector(".park-art");
+          if (art) {
+            art.classList.remove("pet-level-1", "pet-level-2", "pet-level-3", "pet-level-4", "pet-level-5");
+            art.classList.add("pet-level-" + level);
+            var old = art.querySelector(".pet-glow");
+            if (old && old.parentNode) old.parentNode.removeChild(old);
+            if (level >= 2) art.insertAdjacentHTML("afterbegin", petGlowHTML(level));
+          }
+          var chip = actor.querySelector(".park-level");
+          if (chip) chip.textContent = "Lv " + level;
+        }
+        function notePetLevelUp(actor, c, res) {
+          if (!res || !res.leveled || !c) return;
+          refreshParkActorGlow(actor, res.level);
+          var msgEl = document.getElementById("parkMsg");
+          if (msgEl) msgEl.textContent = "Level up! " + c.name + " is now Pet Level " + res.level + " - " + PET_LEVEL_NAMES[res.level - 1] + "!";
+          playSfx("sparkle");
+        }
+        /* Playing together in the rally earns a little Bond XP: the
+           first catch for each of the current player's own creatures
+           in a visit. Tapping a creature to play earns more, a few
+           seconds apart, so happy tapping cannot farm levels. */
+        function awardRallyBondXp(actor) {
+          var cid = actor ? actor.getAttribute("data-park-actor") : null;
+          if (!cid || rallyBondAwarded[cid]) return null;
+          var owner = petOwnerKey(cid);
+          if (!owner || owner !== selected) return null;
+          rallyBondAwarded[cid] = true;
+          var res = awardPetXp(owner, cid, 1);
+          if (res && res.leveled) notePetLevelUp(actor, creatureById(cid), res);
+          return res;
+        }
+        function awardParkTapXp(cid) {
+          var owner = petOwnerKey(cid);
+          if (!owner || owner !== selected) return null;
+          var now = Date.now();
+          if (petTapXpAt[cid] && now - petTapXpAt[cid] < 12000) return null;
+          petTapXpAt[cid] = now;
+          return awardPetXp(owner, cid, 3);
+        }
 
         function startParkFx() {
           stopParkFx();
@@ -6939,8 +7210,10 @@ var NARRATION_CLIPS = [
           rallyLeg(fromEl, toEl, function () {
             if (!rally.active) return;
             var spot = rallySpot(toEl);
+            var bondRes = spot.pet ? awardRallyBondXp(toEl) : null;
             var cries = spot.pet ? RALLY_PET_CRIES : RALLY_KID_CRIES;
-            if (Math.random() < 0.55) parkShowBubble(toEl, cries[Math.floor(Math.random() * cries.length)]);
+            if (bondRes && bondRes.leveled) parkShowBubble(toEl, "Level up!");
+            else if (Math.random() < 0.55) parkShowBubble(toEl, cries[Math.floor(Math.random() * cries.length)]);
             rally.timer = setTimeout(rallyTurn, 650 + Math.random() * 800);
           });
         }
@@ -7020,12 +7293,13 @@ var NARRATION_CLIPS = [
             var oSave = peekSave(owner);
             var fav = !!oSave && (oSave.favs || []).indexOf(c.id) !== -1;
             var pill = petAccSpansFor(displayPetSlots(c.id), true);
+            var pLevel = petLevelFor(oSave, c.id);
             scene += '<button type="button" class="park-actor ' + anims[i % anims.length] + (justArrived === c.id ? " arriving" : "") + '" data-park-actor="' + c.id + '" data-speak="' + c.id + '"' +
               ' style="left:' + slot.l + "%;bottom:" + slot.b + "%;z-index:" + (fav ? 6 : 3) + ";animation-delay:" + (i * 0.37 % 2).toFixed(2) + 's"' +
-              ' aria-label="' + c.name + " playing. Tap to say hello.\">" +
+              ' aria-label="' + c.name + " playing, Pet Level " + pLevel + ". Tap to play and say hello.\">" +
               '<span class="park-bubble" aria-hidden="true"></span>' +
-              '<span class="park-art">' + ART[c.id] + pill + "</span>" +
-              '<span class="park-name">' + (fav ? '<span class="fav-star">' + FAV_STAR_SVG + "</span>" : "") + c.name + "</span></button>";
+              '<span class="park-art' + petStageClass(oSave, c.id) + '">' + petGlowHTML(pLevel) + ART[c.id] + pill + "</span>" +
+              '<span class="park-name">' + (fav ? '<span class="fav-star">' + FAV_STAR_SVG + "</span>" : "") + c.name + '<span class="park-level">Lv ' + pLevel + "</span></span></button>";
           });
           var tossActs = ["ball", "frisbee", "snowball", "pumpkin"];
           if (effAct === "kite") scene += '<span class="park-kite" aria-hidden="true"><svg class="kite-string" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d="M82 16 Q48 52 4 97" fill="none" stroke="#5a4364" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-linecap="round"/></svg><span class="kite-art">' + KITE_SVG + "</span></span>";
@@ -7048,7 +7322,7 @@ var NARRATION_CLIPS = [
               '<span class="park-name">Hudson</span></button>' +
             "</div>";
           var html = '<h3 class="set-head">Hangout: ' + setting.name + "</h3>" +
-            '<p class="screen-sub">Hazel and Hudson are hanging out here with the creatures who live in this place. Tap anyone to say hello, and tap a creature to hear its own special sound.</p>' +
+            '<p class="screen-sub">Hazel and Hudson are hanging out here with the creatures who live in this place. Tap anyone to say hello, and tap a creature to hear its own special sound. Tapping your own creature to play earns Bond XP, and so does its first rally catch of a visit: watch their Pet Level glow grow!</p>' +
             '<p class="status-line" id="parkMsg" role="status"></p>' +
             controls +
             actControls +
@@ -7071,9 +7345,9 @@ var NARRATION_CLIPS = [
               var chips2 = parkOwners(c.id).map(function (o) {
                 return '<span class="chip ' + o + '">Collected by ' + PLAYERS[o].name + "</span>";
               }).join("");
-              var oSv = peekSave(creatureOwner(c.id) || "");
+              var oSv = peekSave(creatureOwner(c.id) || (demoCreatureById(c.id) ? "demo" : ""));
               var favMark = (oSv && (oSv.favs || []).indexOf(c.id) !== -1) ? '<span class="fav-star">' + FAV_STAR_SVG + "</span>" : "";
-              html += '<div class="park-roster-row"><span class="rname">' + favMark + c.name + '</span><span class="species" style="font-weight:800;color:var(--ink-soft)">' + c.species + '</span><span class="chips">' + chips2 + "</span></div>";
+              html += '<div class="park-roster-row"><span class="rname">' + favMark + c.name + '</span><span class="species" style="font-weight:800;color:var(--ink-soft)">' + c.species + '</span>' + petLevelBadgeHTML(oSv, c.id) + '<span class="chips">' + chips2 + "</span></div>";
             });
             html += "</div>";
             if (elsewhere) {
@@ -7194,6 +7468,8 @@ var NARRATION_CLIPS = [
             if (currentScreen === "profile") renderProfile();
             return;
           }
+          var careBtn = t.closest("[data-pet-care]");
+          if (careBtn) { var careParts = careBtn.getAttribute("data-pet-care").split("|"); careForPet(careParts[0], careParts[1]); return; }
           var favBtn = t.closest("[data-fav]");
           if (favBtn) { toggleFav(favBtn.getAttribute("data-fav")); return; }
           var stableBtn = t.closest("[data-stable]");
@@ -7260,12 +7536,30 @@ var NARRATION_CLIPS = [
             if (cid) {
               var pc = creatureById(cid);
               if (pc) {
-                parkShowBubble(actor, pc.name + "!");
+                /* Playing with your OWN creature earns Bond XP (see
+                   awardParkTapXp for the gentle anti-farm pause). A
+                   level-up gets the big bubble and message; a plain
+                   XP tap says so in the bubble; anyone else's creature
+                   just says hello, exactly as before. */
+                var tapRes = awardParkTapXp(cid);
+                if (tapRes && tapRes.leveled) {
+                  notePetLevelUp(actor, pc, tapRes);
+                  parkShowBubble(actor, "Level up!");
+                } else if (tapRes) {
+                  parkShowBubble(actor, pc.name + "! +3 Bond XP");
+                  var tapMsg = document.getElementById("parkMsg");
+                  if (tapMsg) tapMsg.textContent = pc.name + " earned 3 Bond XP for playing with you! " + (tapRes.info.max ? pc.name + " is already a Rainbow legend!" : tapRes.info.left + " XP to Pet Level " + (tapRes.level + 1) + ".");
+                } else {
+                  parkShowBubble(actor, pc.name + "!");
+                }
                 /* The creature's signature sound plays first; for
                    Hudson, its name is spoken once the sound finishes,
                    never over it. Hazel keeps the name bubble as before. */
                 playCreatureSound(cid).then(function () {
-                  if (selected === "hudson" && pc) speak(pc.name + ", the " + pc.species + ".");
+                  if (selected === "hudson" && pc) {
+                    if (tapRes && tapRes.leveled) speak("Level up! " + pc.name + " is now Pet Level " + tapRes.level + "!");
+                    else speak(pc.name + ", the " + pc.species + ".");
+                  }
                 });
               }
               return;
@@ -7367,6 +7661,7 @@ var NARRATION_CLIPS = [
             accessories: (s.accOwned || []).length,
             places: (s.places || []).length,
             starLevel: starLevelFor(s.questionsAnswered || 0),
+            topPetLevel: (s.owned || []).reduce(function (m, cid) { return Math.max(m, petLevelFor(s, cid)); }, 0),
             challengeLevel: s.level || 1,
             streak: s.streak || 0,
             bestStreak: s.bestStreak || 0,
@@ -7377,7 +7672,7 @@ var NARRATION_CLIPS = [
           if (!f) return "no save on this device yet";
           return f.coins + " coins, " + f.creatures + (f.creatures === 1 ? " creature" : " creatures") +
             ", " + f.accessories + " accessories, " + f.places + (f.places === 1 ? " place" : " places") +
-            " unlocked, Star Level " + f.starLevel + ", Challenge Level " + f.challengeLevel +
+            " unlocked, Star Level " + f.starLevel + (f.creatures ? ", top Pet Level " + f.topPetLevel : "") + ", Challenge Level " + f.challengeLevel +
             ", " + f.questions + " questions answered, best streak " + f.bestStreak;
         }
         /* CP2 packing: a CP1 code was the base64 of the save's full
@@ -7436,6 +7731,11 @@ var NARRATION_CLIPS = [
             if (pd.length) p.pd = pd;
           }
           p.fv = xferPackIdList(cids, s.favs);
+          if (s.petXp && typeof s.petXp === "object") {
+            var px = Object.keys(s.petXp).filter(function (cid) { return typeof s.petXp[cid] === "number" && s.petXp[cid] > 0; })
+              .map(function (cid) { return [xferPackId(cids, cid), s.petXp[cid]]; });
+            if (px.length) p.px = px;
+          }
           p.sk = s.streak;
           p.bs = s.bestStreak;
           p.qa = s.questionsAnswered;
@@ -7479,6 +7779,10 @@ var NARRATION_CLIPS = [
             p.pd.forEach(function (pair) { if (Array.isArray(pair)) s.placed[xferUnpackId(cids, pair[0])] = pair[1]; });
           }
           s.favs = xferUnpackIdList(cids, p.fv);
+          if (Array.isArray(p.px)) {
+            s.petXp = {};
+            p.px.forEach(function (pair) { if (Array.isArray(pair) && typeof pair[1] === "number") s.petXp[xferUnpackId(cids, pair[0])] = pair[1]; });
+          }
           s.streak = p.sk;
           s.bestStreak = p.bs;
           s.questionsAnswered = p.qa;
@@ -7606,7 +7910,7 @@ var NARRATION_CLIPS = [
               "<h3>Grown-ups corner</h3>" +
               '<p class="adult-note">Move a child\'s save to another device with a transfer code, or reset the demo park. Nothing changes until you confirm it.</p>' +
               "<h4>Make a transfer code on this device</h4>" +
-              '<p class="adult-note">A code carries one child\'s whole profile: coins, creatures and who owns them, accessories, places, the activities they unlocked, gifts, Star Level, streaks and question stats.</p>' +
+              '<p class="adult-note">A code carries one child\'s whole profile: coins, creatures and who owns them, each creature\'s Pet Level and Bond XP, accessories, places, the activities they unlocked, gifts, Star Level, streaks and question stats.</p>' +
               kidBlock("hazel") + kidBlock("hudson") +
               "<h4>Bring a save to this device</h4>" +
               '<p class="adult-note">Paste a code made on the other device. You will see whose save it is and what it would replace before anything changes. The other child and the demo park are never touched by an import.</p>' +
