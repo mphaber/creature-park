@@ -1296,6 +1296,46 @@
         .answer-btn, .buy-btn, .speak-q, .count-pip, .creature, .profile-chip,
         .hub-menu button { transition: none; }
       }
+
+      /* ---------- Site footer: credit, copyright & trademark ---------- */
+      .site-footer {
+        width: 100%;
+        margin-top: auto;
+        padding: 22px 16px 4px;
+        border-top: 2px solid var(--card-border);
+        text-align: center;
+      }
+      .site-footer p { margin: 0; }
+      .site-footer .footer-brand {
+        font-family: "Baloo 2", "Nunito", sans-serif;
+        font-size: 1.25rem;
+        font-weight: 800;
+        line-height: 1.2;
+        color: var(--ink);
+      }
+      .site-footer .footer-brand .tm {
+        font-size: 0.72em;
+        font-weight: 700;
+        vertical-align: super;
+        line-height: 1;
+      }
+      .site-footer .footer-credit {
+        margin-top: 5px;
+        font-size: 1rem;
+        font-weight: 700;
+        line-height: 1.45;
+        color: var(--ink);
+      }
+      .site-footer .footer-legal {
+        margin-top: 7px;
+        font-size: 0.88rem;
+        font-weight: 600;
+        line-height: 1.55;
+        color: var(--ink-soft);
+        max-width: 62ch;
+        margin-left: auto;
+        margin-right: auto;
+      }
     </style>
   </head>
   <body>
@@ -1408,6 +1448,12 @@
       </section>
 
       <div class="adult-overlay" id="grownOverlay" hidden></div>
+
+      <footer class="site-footer">
+        <p class="footer-brand">Creature Park<span class="tm" aria-hidden="true">™</span></p>
+        <p class="footer-credit">Created for Hazel &amp; Hudson by Matthew Haber</p>
+        <p class="footer-legal">© 2026 Matthew Haber. All rights reserved. Creature Park™ is a trademark of Matthew Haber. The Creature Park name, characters, artwork, and game content may not be reproduced or redistributed without permission.</p>
+      </footer>
     </main>
 
     <script>
