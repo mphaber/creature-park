@@ -2569,16 +2569,18 @@ var NARRATION_CLIPS = [
         }
 
         var STAR_THRESHOLDS = [0, 10, 25, 45, 70, 100, 140, 190, 250, 325];
-        var saved = loadPlayer();
-        if (saved && PLAYERS[saved]) {
-          selectPlayer(saved, { quiet: true });
-          var retS = peekSave(saved);
-          hintEl.textContent = (retS && (retS.coins > 0 || retS.owned.length > 0 || (retS.level || 1) > 1))
-            ? "Welcome back, " + PLAYERS[saved].name + "! You have " + retS.owned.length + (retS.owned.length === 1 ? " pet" : " pets") + " · Challenge Level " + (retS.level || 1) + " · " + retS.coins + " Star Coins. Tap Play, or pick the other player to switch."
-            : "Welcome back, " + PLAYERS[saved].name + "! Tap Play, or pick the other player to switch.";
-        }
-        renderSavedSummaries();
-        renderStarBadges();
+        /* The returning-player welcome (selectPlayer + the saved-game
+           summaries and Star badges) runs at the very END of this script,
+           not here. It renders through helpers whose data tables are
+           defined further down (the Star tier paint table, the demo grade
+           list); running it here, mid-script, made it throw for any
+           returning player whose Star tier uses the paint table - and
+           because the throw escaped during page load, everything defined
+           below this point (the save store, the hub, the park, the
+           Grown-ups corner) never finished setting up, so "Start
+           playing" sat dead on the confirmation screen. Fresh profiles
+           never hit it: with no save on the device the badge render is
+           skipped entirely. See the matching block at the end. */
 
         /* ================================================================
            Creature Park: Star Coins, shop, collection, shared park
@@ -4798,7 +4800,10 @@ var NARRATION_CLIPS = [
               : '<stop offset="0" stop-color="#ffb3dd"/><stop offset="0.55" stop-color="#c3a6ff"/><stop offset="1" stop-color="#8fd0ff"/>';
             return '<svg viewBox="0 0 24 24" aria-hidden="true"><defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="1" y2="1">' + stops + '</linearGradient></defs><path d="' + d + '" fill="url(#' + gid + ')" stroke="#8a5fd0" stroke-width="1" stroke-linejoin="round"/></svg>';
           }
-          var p = STAR_TIER_PAINT[tier];
+          /* Guarded lookup: a badge render must never be able to throw
+             just because it was reached before this table was assigned
+             (that is exactly how the returning-player freeze happened). */
+          var p = (typeof STAR_TIER_PAINT !== "undefined" && STAR_TIER_PAINT[tier]) || { fill: "#f6b73c", stroke: "#d9930d" };
           return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="' + d + '" fill="' + p.fill + '" stroke="' + p.stroke + '" stroke-width="1" stroke-linejoin="round"/></svg>';
         }
         function starBadgeHTML(qa) {
@@ -7321,7 +7326,9 @@ var NARRATION_CLIPS = [
               worn, places, favourite/stable placement, gifts claimed,
               Challenge Level, streaks and question stats) plus the ids of
               the family activities that kid bought, into one copyable
-              code: "CP1." + base64(JSON) + "." + checksum. Import
+              code: "CP2." + base64(packed JSON) + "." + checksum (the
+              packing is described at packSaveForTransfer below; import
+              still reads the older "CP1." codes too). Import
               validates the code first (a malformed or tampered code
               fails with a friendly message and changes nothing), shows
               exactly whose save it is and what it would replace, and
@@ -7373,23 +7380,138 @@ var NARRATION_CLIPS = [
             " unlocked, Star Level " + f.starLevel + ", Challenge Level " + f.challengeLevel +
             ", " + f.questions + " questions answered, best streak " + f.bestStreak;
         }
+        /* CP2 packing: a CP1 code was the base64 of the save's full
+           JSON, field names and all, which made real codes thousands of
+           characters. CP2 packs the same progress into short keys and
+           refers to creatures and accessories by their position in the
+           catalogs (an id the catalogs do not know, like a gift
+           keepsake, travels as its plain string, so nothing is ever
+           lost). One deliberate omission: the question-repeat memory
+           (seen / seenBonus) is a cache, not progress - signatures are
+           whole question texts, hundreds of them, and they dwarf
+           everything else in the code - so the receiving device simply
+           starts that memory fresh while every coin, creature,
+           accessory, place, gift, level, streak and stat arrives
+           intact. Import still accepts CP1 codes unchanged. */
+        var XFER_CREATURE_IDS = null, XFER_ACC_IDS = null;
+        function xferCreatureIds() {
+          if (!XFER_CREATURE_IDS) XFER_CREATURE_IDS = allCreatures().concat(DEMO_CREATURES).map(function (c) { return c.id; });
+          return XFER_CREATURE_IDS;
+        }
+        function xferAccIds() {
+          if (!XFER_ACC_IDS) XFER_ACC_IDS = ACCESSORIES.map(function (a) { return a.id; });
+          return XFER_ACC_IDS;
+        }
+        function xferPackId(ids, id) { var i = ids.indexOf(id); return i === -1 ? String(id) : i; }
+        function xferUnpackId(ids, v) { return (typeof v === "number") ? (ids[v] || String(v)) : String(v); }
+        function xferPackIdList(ids, list) { return (Array.isArray(list) ? list : []).map(function (id) { return xferPackId(ids, id); }); }
+        function xferUnpackIdList(ids, list) { return (Array.isArray(list) ? list : []).map(function (v) { return xferUnpackId(ids, v); }); }
+        function packSaveForTransfer(s) {
+          var cids = xferCreatureIds(), aids = xferAccIds();
+          var p = {};
+          p.c = s.coins;
+          p.o = xferPackIdList(cids, s.owned);
+          if (s.ownedAt && typeof s.ownedAt === "object") {
+            p.ot = Object.keys(s.ownedAt).map(function (cid) { return [xferPackId(cids, cid), s.ownedAt[cid]]; });
+          }
+          p.l = s.level;
+          if (typeof s.grade === "string") p.g = s.grade;
+          p.ao = xferPackIdList(aids, s.accOwned);
+          p.av = (s.accAvatar == null) ? null : xferPackId(aids, s.accAvatar);
+          if (s.accpets && typeof s.accpets === "object") {
+            var ap = Object.keys(s.accpets).map(function (cid) { return [xferPackId(cids, cid), xferPackId(aids, s.accpets[cid])]; });
+            if (ap.length) p.ap = ap;
+          }
+          if (s.accpets2 && typeof s.accpets2 === "object") {
+            var ap2 = Object.keys(s.accpets2).map(function (cid) {
+              var w = s.accpets2[cid] || {};
+              return [xferPackId(cids, cid), w.head ? xferPackId(aids, w.head) : null, w.neck ? xferPackId(aids, w.neck) : null];
+            });
+            if (ap2.length) p.ap2 = ap2;
+          }
+          p.pl = Array.isArray(s.places) ? s.places.slice() : [];
+          p.st = s.setting;
+          if (s.placed && typeof s.placed === "object") {
+            var pd = Object.keys(s.placed).map(function (cid) { return [xferPackId(cids, cid), s.placed[cid]]; });
+            if (pd.length) p.pd = pd;
+          }
+          p.fv = xferPackIdList(cids, s.favs);
+          p.sk = s.streak;
+          p.bs = s.bestStreak;
+          p.qa = s.questionsAnswered;
+          p.gc = Array.isArray(s.giftsClaimed) ? s.giftsClaimed.slice() : [];
+          var stt = (s.stats && typeof s.stats === "object") ? s.stats : {};
+          p.ss = [stt.answered || 0, stt.firstTry || 0, stt.rounds || 0,
+            (Array.isArray(stt.recent) ? stt.recent : []).map(function (r) { return [(r && r.a) || 0, (r && r.f) || 0]; })];
+          return p;
+        }
+        function unpackSaveFromTransfer(p) {
+          var cids = xferCreatureIds(), aids = xferAccIds();
+          var s = {};
+          s.coins = p.c;
+          s.owned = xferUnpackIdList(cids, p.o);
+          if (Array.isArray(p.ot)) {
+            s.ownedAt = {};
+            p.ot.forEach(function (pair) { if (Array.isArray(pair)) s.ownedAt[xferUnpackId(cids, pair[0])] = pair[1]; });
+          }
+          s.level = p.l;
+          if (typeof p.g === "string") s.grade = p.g;
+          s.accOwned = xferUnpackIdList(aids, p.ao);
+          s.accAvatar = (p.av == null) ? null : xferUnpackId(aids, p.av);
+          if (Array.isArray(p.ap)) {
+            s.accpets = {};
+            p.ap.forEach(function (pair) { if (Array.isArray(pair)) s.accpets[xferUnpackId(cids, pair[0])] = xferUnpackId(aids, pair[1]); });
+          }
+          if (Array.isArray(p.ap2)) {
+            s.accpets2 = {};
+            p.ap2.forEach(function (row) {
+              if (!Array.isArray(row)) return;
+              var w = {};
+              if (row[1] != null) w.head = xferUnpackId(aids, row[1]);
+              if (row[2] != null) w.neck = xferUnpackId(aids, row[2]);
+              s.accpets2[xferUnpackId(cids, row[0])] = w;
+            });
+          }
+          s.places = Array.isArray(p.pl) ? p.pl.slice() : [];
+          s.setting = p.st;
+          if (Array.isArray(p.pd)) {
+            s.placed = {};
+            p.pd.forEach(function (pair) { if (Array.isArray(pair)) s.placed[xferUnpackId(cids, pair[0])] = pair[1]; });
+          }
+          s.favs = xferUnpackIdList(cids, p.fv);
+          s.streak = p.sk;
+          s.bestStreak = p.bs;
+          s.questionsAnswered = p.qa;
+          s.giftsClaimed = Array.isArray(p.gc) ? p.gc.slice() : [];
+          if (Array.isArray(p.ss)) {
+            s.stats = {
+              answered: p.ss[0] || 0, firstTry: p.ss[1] || 0, rounds: p.ss[2] || 0,
+              recent: (Array.isArray(p.ss[3]) ? p.ss[3] : []).map(function (pair) { return { a: (pair && pair[0]) || 0, f: (pair && pair[1]) || 0 }; })
+            };
+          }
+          return s;
+        }
         function encodeTransfer(key) {
           var s = ensureSave(key);
-          var clone = JSON.parse(JSON.stringify(s));
-          var payload = { app: "creature-park-save", v: 1, player: key, exportedAt: new Date().toISOString(), activities: activitiesBoughtBy(key), save: clone };
+          var payload = { app: "creature-park-save", v: 2, player: key, t: Math.floor(Date.now() / 1000), act: activitiesBoughtBy(key), s: packSaveForTransfer(s) };
           var b64 = b64Encode(JSON.stringify(payload));
-          return "CP1." + b64 + "." + xferChecksum(b64);
+          return "CP2." + b64 + "." + xferChecksum(b64);
         }
         function decodeTransfer(code) {
           try {
             var clean = String(code || "").replace(/\s+/g, "");
             if (!clean) return { ok: false, error: "empty" };
             var parts = clean.split(".");
-            if (parts.length !== 3 || parts[0] !== "CP1") return { ok: false, error: "format" };
+            if (parts.length !== 3 || (parts[0] !== "CP1" && parts[0] !== "CP2")) return { ok: false, error: "format" };
             if (xferChecksum(parts[1]) !== parts[2].toLowerCase()) return { ok: false, error: "checksum" };
             var payload = JSON.parse(b64Decode(parts[1]));
             if (!payload || payload.app !== "creature-park-save") return { ok: false, error: "app" };
             if (payload.player !== "hazel" && payload.player !== "hudson") return { ok: false, error: "player" };
+            if (parts[0] === "CP2") {
+              var ps = payload.s;
+              if (!ps || typeof ps !== "object" || Array.isArray(ps) || typeof ps.c !== "number" || !Array.isArray(ps.o)) return { ok: false, error: "save" };
+              return { ok: true, player: payload.player, exportedAt: payload.t ? new Date(payload.t * 1000).toISOString() : "", activities: Array.isArray(payload.act) ? payload.act : [], save: unpackSaveFromTransfer(ps) };
+            }
             var sv = payload.save;
             if (!sv || typeof sv !== "object" || Array.isArray(sv) || typeof sv.coins !== "number" || !Array.isArray(sv.owned)) return { ok: false, error: "save" };
             return { ok: true, player: payload.player, exportedAt: payload.exportedAt || "", activities: Array.isArray(payload.activities) ? payload.activities : [], save: sv };
@@ -7675,6 +7797,22 @@ var NARRATION_CLIPS = [
           save: function () { return peekSave("demo"); }
         };
         window.__hhGrown = { open: openGrownups, close: closeGrownups };
+
+        /* Returning-player welcome, deliberately the LAST setup step:
+           every table and helper it touches is defined by this point, so
+           loading with a save on the device can never half-initialise
+           the game the way it once did (see the note where this block
+           used to sit, near the top of the script). */
+        var saved = loadPlayer();
+        if (saved && PLAYERS[saved]) {
+          selectPlayer(saved, { quiet: true });
+          var retS = peekSave(saved);
+          hintEl.textContent = (retS && (retS.coins > 0 || retS.owned.length > 0 || (retS.level || 1) > 1))
+            ? "Welcome back, " + PLAYERS[saved].name + "! You have " + retS.owned.length + (retS.owned.length === 1 ? " pet" : " pets") + " · Challenge Level " + (retS.level || 1) + " · " + retS.coins + " Star Coins. Tap Play, or pick the other player to switch."
+            : "Welcome back, " + PLAYERS[saved].name + "! Tap Play, or pick the other player to switch.";
+        }
+        renderSavedSummaries();
+        renderStarBadges();
 
         decorateCards();
         if (selected && panelEl.classList.contains("show")) renderPanel(selected);
