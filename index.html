@@ -1094,6 +1094,15 @@
       .panel-avatar.demo, .hub-avatar.demo { background: linear-gradient(160deg, #d7f0ea, #dbeafe); display: flex; align-items: center; justify-content: center; }
       .panel-avatar.demo svg, .hub-avatar.demo svg { width: 82%; height: 82%; display: block; }
       .chip.demo { background: var(--demo); }
+      /* Demo challenge-level (grade) picker: six big tappable grades,
+         Kindergarten through 5th, shown on the demo panel and profile. */
+      .grade-picker { margin: 18px 0 4px; }
+      .grade-title { font-family: "Baloo 2", "Nunito", sans-serif; font-weight: 800; font-size: 1.25rem; color: var(--ink); margin: 0 0 10px; text-align: center; }
+      .grade-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+      .grade-btn { min-height: 56px; border-radius: 16px; border: 3px solid var(--card-border); background: var(--card-bg); color: var(--ink); font-family: "Baloo 2", "Nunito", sans-serif; font-weight: 800; font-size: 1.05rem; padding: 8px 6px; cursor: pointer; }
+      .grade-btn.on { background: var(--demo); border-color: var(--demo-dark); color: #ffffff; box-shadow: 0 4px 0 var(--demo-dark); }
+      .grade-btn:focus-visible { outline: 5px solid var(--sun); outline-offset: 3px; }
+      @media (max-width: 560px) { .grade-grid { grid-template-columns: repeat(2, 1fr); } }
       .grownups-bar { margin-top: 30px; text-align: center; }
       .grown-btn { min-height: 48px; border-radius: 999px; border: 3px solid var(--card-border); background: transparent; color: var(--ink-soft); font-family: "Baloo 2", "Nunito", sans-serif; font-weight: 800; font-size: 1rem; padding: 8px 22px; cursor: pointer; }
       .grown-btn:focus-visible { outline: 5px solid var(--sun); outline-offset: 3px; }
@@ -1270,7 +1279,8 @@
             headline: "The demo park",
             sub: "A try-it park for visitors who are not Hazel or Hudson.",
             features: [
-              { icon: "puzzle", text: "The same questions, shop and Hangout as the real park" },
+              { icon: "puzzle", text: "The same shop and Hangout as the real park" },
+              { icon: "abc", text: "Pick a challenge level: Kindergarten up to 5th Grade" },
               { icon: "heart", text: "Your own demo coins and demo friends to collect" },
               { icon: "book", text: "Demo play never spends or changes the kids' own game" },
               { icon: "speaker", text: "A grown-up can reset the demo park at any time" }
@@ -2405,6 +2415,7 @@ var NARRATION_CLIPS = [
               "<div><h2>" + p.headline + "</h2><p>" + p.sub + "</p></div>" +
             "</div>" +
             '<ul class="features">' + items + "</ul>" +
+            (player === "demo" ? gradePickerHTML() : "") +
             '<p style="margin:14px 2px 0;font-size:1.08rem;font-weight:700;color:var(--ink-soft)">' + p.note + "</p>" +
             '<div class="actions">' +
               '<button type="button" class="btn btn-play" id="playBtn">Play as ' + p.name + "</button>" +
@@ -2412,6 +2423,12 @@ var NARRATION_CLIPS = [
             "</div>";
           document.getElementById("playBtn").addEventListener("click", confirmPlay);
           document.getElementById("backBtn").addEventListener("click", resetSelection);
+          panelEl.querySelectorAll("[data-grade-pick]").forEach(function (gb) {
+            gb.addEventListener("click", function () {
+              setDemoGrade(gb.getAttribute("data-grade-pick"));
+              renderPanel("demo");
+            });
+          });
           panelEl.classList.add("show");
         }
 
@@ -2972,6 +2989,47 @@ var NARRATION_CLIPS = [
         var shopTab = "pets";
         var justArrived = null; /* creature id that hops in beside its buyer on its first scene visit */
         var LEVEL_CAPS = { hazel: 8, hudson: 5, demo: 8 };
+
+        /* ---------- Demo challenge levels (grades) ----------
+           The demo player picks a school grade and the questions follow
+           it. Kindergarten and 1st Grade ride Hudson's picture-question
+           engine (counting, letters, shapes, patterns, picture adding),
+           pitched at his gentlest and his fullest settings. 2nd through
+           5th Grade ride Hazel's school-question engine at climbing
+           levels, so each grade is visibly trickier than the one before.
+           The pick lives on the demo save (s.grade), so it survives
+           reloads, stays out of the kids' saves, and a demo reset
+           returns it to the 3rd Grade default. */
+        var DEMO_GRADES = [
+          { id: "K", label: "Kindergarten", engine: "hudson", hudL: 1 },
+          { id: "1", label: "1st Grade", engine: "hudson", hudL: 4 },
+          { id: "2", label: "2nd Grade", engine: "hazel", hazL: 1 },
+          { id: "3", label: "3rd Grade", engine: "hazel", hazL: 2 },
+          { id: "4", label: "4th Grade", engine: "hazel", hazL: 4 },
+          { id: "5", label: "5th Grade", engine: "hazel", hazL: 6 }
+        ];
+        function demoGradeConf() {
+          var s = peekSave("demo");
+          var id = s && s.grade;
+          for (var gi = 0; gi < DEMO_GRADES.length; gi++) {
+            if (DEMO_GRADES[gi].id === id) return DEMO_GRADES[gi];
+          }
+          return DEMO_GRADES[3]; /* 3rd Grade until a grade is picked */
+        }
+        function setDemoGrade(id) {
+          var ok = DEMO_GRADES.some(function (g) { return g.id === id; });
+          if (!ok) return;
+          var s = ensureSave("demo");
+          if (s.grade !== id) { s.grade = id; persistSave("demo", s); }
+        }
+        function gradePickerHTML() {
+          var cur = demoGradeConf();
+          return '<div class="grade-picker"><p class="grade-title">Pick a challenge level</p><div class="grade-grid">' +
+            DEMO_GRADES.map(function (g) {
+              var on = g.id === cur.id;
+              return '<button type="button" class="grade-btn' + (on ? " on" : "") + '" data-grade-pick="' + g.id + '" aria-pressed="' + (on ? "true" : "false") + '">' + g.label + "</button>";
+            }).join("") + "</div></div>";
+        }
         var sessionRounds = { hazel: 0, hudson: 0, demo: 0 };
         var bonusQ = null;
         var bonusActive = false;
@@ -3260,6 +3318,9 @@ var NARRATION_CLIPS = [
           }
           var dirty = false;
           if (typeof s.level !== "number" || s.level < 1) { s.level = 1; dirty = true; }
+          /* The demo's picked challenge grade (see DEMO_GRADES). Existing
+             demo saves predate the picker: they start on 3rd Grade. */
+          if (key === "demo" && !DEMO_GRADES.some(function (g) { return g.id === s.grade; })) { s.grade = "3"; dirty = true; }
           if (!Array.isArray(s.accOwned)) { s.accOwned = []; dirty = true; }
           if (typeof s.accAvatar === "undefined") { s.accAvatar = null; dirty = true; }
           if (!s.accpets || typeof s.accpets !== "object" || Array.isArray(s.accpets)) { s.accpets = {}; dirty = true; }
@@ -3684,8 +3745,12 @@ var NARRATION_CLIPS = [
               '<div class="stat"><div class="num">' + mainOwnedCount(s) + " of " + (selected === "demo" ? DEMO_CREATURES.length : CREATURES.length) + '</div><div class="lbl">' + (selected === "demo" ? "Demo friends" : "Creatures collected") + '</div></div>' +
               '<div class="stat"><div class="num">' + parkCount() + '</div><div class="lbl">Out playing</div></div>' +
             "</div>" +
-            '<p style="text-align:center;margin:14px 0 0"><span class="level-pill">Challenge Level ' + s.level + "</span></p>" +
-            '<p class="profile-note" style="text-align:center">Finish a Learn &amp; Earn round to raise your Challenge Level. Higher levels mean trickier questions and bigger round bonuses.</p>' +
+            (selected === "demo"
+              ? '<p style="text-align:center;margin:14px 0 0"><span class="level-pill">' + demoGradeConf().label + " challenge</span></p>" +
+                gradePickerHTML() +
+                '<p class="profile-note" style="text-align:center">Questions are matched to the grade you pick: counting, letters and pictures for Kindergarten and 1st Grade, then school maths, words and science that climb from 2nd to 5th. Your next round uses the grade shown.</p>'
+              : '<p style="text-align:center;margin:14px 0 0"><span class="level-pill">Challenge Level ' + s.level + "</span></p>" +
+                '<p class="profile-note" style="text-align:center">Finish a Learn &amp; Earn round to raise your Challenge Level. Higher levels mean trickier questions and bigger round bonuses.</p>') +
             '<div class="momentum-card">' +
               '<p class="momentum-line">' + SPARK_TINY + '<span>Answer streak: <strong>' + s.streak + " in a row</strong> · Best streak: " + s.bestStreak + "</span></p>" +
               '<p class="momentum-line"><span>Next streak bonus at ' + nmProf.at + " in a row (+" + nmProf.bonus + " Star Coins)</span></p>" +
@@ -4598,6 +4663,23 @@ var NARRATION_CLIPS = [
             var hkind2 = (round && round.plan && round.plan[round.n - 1]) || pickOf(HUD_KINDS);
             return freshQuestion(function () { return makeHudsonQuestion(hkind2, L); }, "round");
           }
+          if (selected === "demo") {
+            /* The demo serves the grade captured when the round began:
+               Hudson's picture questions for Kindergarten and 1st Grade,
+               Hazel's school questions (same in-round warm-up ramp) for
+               2nd through 5th, each grade a clear step up. */
+            var conf = (round && round.demoGrade) || demoGradeConf();
+            if (conf.engine === "hudson") {
+              var dkind = (round && round.plan && round.plan[round.n - 1]) || pickOf(HUD_KINDS);
+              return freshQuestion(function () { return makeHudsonQuestion(dkind, conf.hudL); }, "round");
+            }
+            var dkind2 = (round && round.plan && round.plan[round.n - 1]) || "mult";
+            var deff = Math.min(9, conf.hazL + (round ? Math.floor(((round.n - 1) / 5) * 2) : 0));
+            var dq = freshQuestion(function () { return makeHazelQuestion(dkind2, deff); }, "round");
+            dq.qkind = dkind2;
+            if (!dq.category) dq.category = HAZEL_CAT_LABELS[dkind2] || "Challenge";
+            return dq;
+          }
           var hkind = (round && round.plan && round.plan[round.n - 1]) || "mult";
           var effL = hazelEffLevel(L, round ? round.n : 0);
           var hq = freshQuestion(function () { return makeHazelQuestion(hkind, effL); }, "round");
@@ -4735,7 +4817,16 @@ var NARRATION_CLIPS = [
           bonusActive = false;
           bonusResolved = false;
           starParty = null;
-          round = { n: 1, score: 0, earned: 0, missed: false, finished: false, bonus: 0, streakEarned: 0, qEarned: 0, qAnswered: 0, qFirstTry: 0, level: s.level, newLevel: s.level, leveledUp: false, bonusOffer: false, plan: selected === "hudson" ? hudsonPlan(s.level) : hazelPlan(s.level) };
+          /* The demo's round is built from its picked grade, captured
+             here so changing the grade mid-round never mixes two
+             grades into one round: the new grade starts next round. */
+          var demoConf = selected === "demo" ? demoGradeConf() : null;
+          round = { n: 1, score: 0, earned: 0, missed: false, finished: false, bonus: 0, streakEarned: 0, qEarned: 0, qAnswered: 0, qFirstTry: 0, level: s.level, newLevel: s.level, leveledUp: false, bonusOffer: false,
+            demoGrade: demoConf,
+            young: selected === "hudson" || !!(demoConf && demoConf.engine === "hudson"),
+            plan: selected === "hudson" ? hudsonPlan(s.level)
+              : demoConf ? (demoConf.engine === "hudson" ? hudsonPlan(demoConf.hudL) : hazelPlan(demoConf.hazL))
+              : hazelPlan(s.level) };
           qLocked = false;
           currentQ = makeQuestion();
         }
@@ -4764,19 +4855,27 @@ var NARRATION_CLIPS = [
             : btns;
           var bonusAmt = 5 + (round.level - 1);
           var sEarn = ensureSave(selected);
-          var rule = selected === "hudson"
+          /* "Young" rounds (Hudson, and the demo's Kindergarten/1st Grade)
+             play by Hudson's gentle rules: the finishing bonus is earned
+             just for finishing, questions are read aloud automatically,
+             and the speak button is the big one. */
+          var youngRound = selected === "hudson" || !!(round && round.young);
+          var roundTag = selected === "demo"
+            ? ((round && round.demoGrade) ? round.demoGrade.label : "Demo")
+            : "Challenge Level " + round.level;
+          var rule = youngRound
             ? "Answer all 5 questions to earn a " + bonusAmt + " coin bonus, plus 1 coin for every first-try answer."
             : "First-try answers earn 1 coin each. Get 4 or 5 first-try answers to win the " + bonusAmt + " coin challenge bonus.";
-          var speakBtn = selected === "hudson"
+          var speakBtn = youngRound
             ? '<button type="button" class="speak-q speak-big" id="speakQ">' + SPEAKER_SVG + " Hear it again</button>"
             : '<button type="button" class="speak-q" id="speakQ">' + SPEAKER_SVG + " Hear the question</button>";
-          var catPill = (selected === "hazel" && q.category)
+          var catPill = ((selected === "hazel" || (selected === "demo" && !youngRound)) && q.category)
             ? '<p class="qcat-wrap"><span class="qcat">' + q.category + "</span></p>" +
               '<p class="screen-sub" style="text-align:center;margin:6px 0 0">This round warms up first, then each question gets a little trickier.</p>'
             : "";
           screenEls.earn.innerHTML =
             '<div class="qcard" data-kind="' + q.kind + '" data-category="' + (q.category || q.kind || "") + '" data-qkind="' + (q.qkind || q.kind || "") + '">' +
-              '<p class="earn-tag">Learn &amp; Earn round · Challenge Level ' + round.level + " · Question " + round.n + " of 5 · " + rule + "</p>" +
+              '<p class="earn-tag">Learn &amp; Earn round · ' + roundTag + " · Question " + round.n + " of 5 · " + rule + "</p>" +
               '<p class="streak-row"><span class="streak-pill" id="streakPill">' + streakPillHTML(sEarn) + "</span></p>" +
               starPartyHTML() +
               catPill +
@@ -4798,7 +4897,7 @@ var NARRATION_CLIPS = [
             var st = document.getElementById("earnStatus");
             if (st && !st.textContent) st.textContent = "You already answered that one. Tap Next to keep going!";
           }
-          if (selected === "hudson") speak(q.spoken);
+          if (selected === "hudson" || (selected === "demo" && round && round.young)) speak(q.spoken);
         }
 
         function countPip(btn) {
@@ -4906,8 +5005,8 @@ var NARRATION_CLIPS = [
             var sW = ensureSave(selected);
             if (sW.streak) { sW.streak = 0; saveCurrent(); }
             refreshStreakPill(sW);
-            if (status) status.textContent = selected === "hudson" ? "Great try! Listen and try again, you can do it!" : "Not quite. Have another go.";
-            if (selected === "hudson") speak("Great try! Listen! Try again! You can do it!");
+            if (status) status.textContent = (selected === "hudson" || (round && round.young)) ? "Great try! Listen and try again, you can do it!" : "Not quite. Have another go.";
+            if (selected === "hudson" || (round && round.young)) speak("Great try! Listen! Try again! You can do it!");
           }
         }
 
@@ -4927,7 +5026,7 @@ var NARRATION_CLIPS = [
           round.finished = true;
           var bonusAmt = 5 + (round.level - 1);
           var bonus = 0;
-          if (selected === "hudson") bonus = bonusAmt;
+          if (selected === "hudson" || (round && round.young)) bonus = bonusAmt;
           else if (round.score >= 4) bonus = bonusAmt;
           round.bonus = bonus;
           var s = ensureSave(selected);
@@ -4975,11 +5074,15 @@ var NARRATION_CLIPS = [
           }
           if (round.streakEarned) lines += "<br>Streak bonuses this round: <strong>+" + round.streakEarned + " Star Coins</strong>.";
           if (round.qEarned) lines += "<br>Question milestone bonus: <strong>+" + round.qEarned + " Star Coins</strong>.";
-          lines += "<br>That was a Challenge Level " + round.level + " round.";
-          if (round.leveledUp) {
-            lines += "<br><strong>You reached Challenge Level " + round.newLevel + "!</strong> Questions get a little trickier, and rounds pay a little more.";
-          } else if (round.level >= (LEVEL_CAPS[selected] || 5)) {
-            lines += "<br>You are at the highest Challenge Level. Amazing work!";
+          if (selected === "demo") {
+            lines += "<br>That was a " + (round.demoGrade ? round.demoGrade.label : "demo") + " round. Pick a different grade any time on the demo profile.";
+          } else {
+            lines += "<br>That was a Challenge Level " + round.level + " round.";
+            if (round.leveledUp) {
+              lines += "<br><strong>You reached Challenge Level " + round.newLevel + "!</strong> Questions get a little trickier, and rounds pay a little more.";
+            } else if (round.level >= (LEVEL_CAPS[selected] || 5)) {
+              lines += "<br>You are at the highest Challenge Level. Amazing work!";
+            }
           }
           var offer = "";
           if (round.bonusOffer) {
@@ -4995,7 +5098,7 @@ var NARRATION_CLIPS = [
           for (var d = 1; d <= 5; d++) dots += '<span class="qdot done"></span>';
           screenEls.earn.innerHTML =
             '<div class="qcard">' +
-              '<p class="earn-tag">Learn &amp; Earn round · Challenge Level ' + round.level + ' · Finished</p>' +
+              '<p class="earn-tag">Learn &amp; Earn round · ' + (selected === "demo" ? (round.demoGrade ? round.demoGrade.label : "Demo") : "Challenge Level " + round.level) + ' · Finished</p>' +
               '<div class="qdots" aria-hidden="true">' + dots + "</div>" +
               '<p class="qtext">' + heading + "</p>" +
               starPartyHTML() +
@@ -5017,7 +5120,10 @@ var NARRATION_CLIPS = [
         }
 
         function makeBonusQuestion() {
-          if (selected === "hudson") {
+          /* The demo's Bonus Challenge follows its grade too: a young
+             grade gets Hudson's picture bonus, an older grade gets the
+             school stretch questions. */
+          if (selected === "hudson" || (selected === "demo" && demoGradeConf().engine === "hudson")) {
             var t = pickOf(["bigcount", "addpic", "missing", "shape", "pattern"]);
             if (t === "bigcount") {
               var n = 15 + Math.floor(Math.random() * 6);
@@ -5184,12 +5290,12 @@ var NARRATION_CLIPS = [
               (bonusQ.category ? '<p class="qcat-wrap"><span class="qcat">' + bonusQ.category + "</span></p>" : "") +
               (bonusQ.visual || "") +
               '<p class="qtext">' + bonusQ.text + "</p>" +
-              '<button type="button" class="speak-q' + (selected === "hudson" ? " speak-big" : "") + '" id="speakQ">' + SPEAKER_SVG + (selected === "hudson" ? " Hear it again" : " Hear the question") + "</button>" +
+              '<button type="button" class="speak-q' + ((selected === "hudson" || (selected === "demo" && demoGradeConf().engine === "hudson")) ? " speak-big" : "") + '" id="speakQ">' + SPEAKER_SVG + ((selected === "hudson" || (selected === "demo" && demoGradeConf().engine === "hudson")) ? " Hear it again" : " Hear the question") + "</button>" +
               '<div class="answers" id="answers">' + bonusQ.options.map(bonusBtnHTML).join("") + "</div>" +
               '<p class="status-line" id="bonusStatus" role="status"></p>' +
               '<div class="next-wrap" id="bonusNext"></div>' +
             "</div>";
-          if (selected === "hudson") speak(bonusQ.spoken);
+          if (selected === "hudson" || (selected === "demo" && demoGradeConf().engine === "hudson")) speak(bonusQ.spoken);
           window.scrollTo({ top: 0, behavior: "smooth" });
         }
 
@@ -6864,6 +6970,12 @@ var NARRATION_CLIPS = [
               }
               return;
             }
+          }
+          var gradePick = t.closest("[data-grade-pick]");
+          if (gradePick) {
+            setDemoGrade(gradePick.getAttribute("data-grade-pick"));
+            if (currentScreen === "profile") renderProfile();
+            return;
           }
           var favBtn = t.closest("[data-fav]");
           if (favBtn) { toggleFav(favBtn.getAttribute("data-fav")); return; }
