@@ -772,6 +772,19 @@
       }
       .music-btn svg { width: 22px; height: 22px; flex: none; }
       .music-btn.off { border-color: var(--card-border); color: var(--ink-soft); }
+      /* Sound controls bar: music and sound effects are two separate
+         switches, reachable from every hub screen (not just the Hangout),
+         so a grown-up can quiet one without losing the other. */
+      .sound-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 16px 0 0; }
+      .sound-label {
+        display: inline-flex; align-items: center; gap: 8px;
+        font-family: "Baloo 2", "Nunito", sans-serif; font-weight: 800; font-size: 1.1rem;
+        margin: 0 auto 0 2px;
+      }
+      .sound-label svg { width: 24px; height: 24px; flex: none; }
+      .sound-bar .music-btn { margin-left: 0; min-height: 48px; }
+      .sound-note { flex: 1 1 100%; margin: 2px 2px 0; font-weight: 700; color: var(--ink-soft); font-size: 0.98rem; }
+      .park-controls .music-btn + .music-btn { margin-left: 0; }
       @media (max-width: 620px) {
         .save-summary { font-size: 0.88rem; padding: 5px 12px; }
         .music-btn { margin-left: 0; }
@@ -1368,6 +1381,13 @@
           </div>
         </div>
 
+        <div class="sound-bar" id="soundBar" role="group" aria-label="Sound controls">
+          <span class="sound-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4V5z" fill="currentColor" stroke="none"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18.2 6a9 9 0 010 12"/></svg>Sound controls</span>
+          <button type="button" class="music-btn sound-btn" id="soundMusicBtn" aria-pressed="true"></button>
+          <button type="button" class="music-btn sound-btn" id="soundFxBtn" aria-pressed="true"></button>
+          <span class="sound-note">Music and sounds turn off separately. Voices stay on, so questions are always read aloud.</span>
+        </div>
+
         <div class="notice-banner event-banner" id="eventBanner" hidden></div>
         <div class="notice-banner gift-banner" id="giftBanner" hidden></div>
 
@@ -1499,6 +1519,35 @@
           count: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="7" r="3"/><circle cx="17" cy="7" r="3"/><circle cx="12" cy="17" r="3"/></svg>',
           heart: '<svg viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.7C6 16.9 3 13.6 3 9.9 3 7.2 5 5 7.6 5c1.8 0 3.4 1 4.4 2.6C13 6 14.6 5 16.4 5 19 5 21 7.2 21 9.9c0 3.7-3 7-9 10.8z"/></svg>'
         };
+
+        /* ---------- Audio session: mix WITH other apps, never over them ----------
+           iOS and iPadOS give a page one audio session for its Web Audio
+           and media playback. Left unset it behaves like "playback": the
+           game's first note takes over the device and stops whatever else
+           was playing (a podcast, music, an audiobook). Setting the
+           session type to "ambient" (Safari 17+) asks the system to MIX
+           the game under and alongside other apps' audio instead, so a
+           podcast keeps playing while the park's music, effects and
+           recorded voices play quietly on top. The known trade-off, the
+           same one accepted for Chain Placement: ambient audio respects
+           the phone's silent switch. Applied before the AudioContext is
+           created and re-applied before clip playback and on taps, since
+           those are the moments the system samples it. Browsers without
+           navigator.audioSession simply skip it. */
+        var audioSessionState = { supported: false, type: null };
+        function applyAmbientAudioSession() {
+          try {
+            if (typeof navigator !== "undefined" && navigator.audioSession) {
+              navigator.audioSession.type = "ambient";
+              audioSessionState.supported = true;
+              audioSessionState.type = navigator.audioSession.type;
+            }
+          } catch (e) { /* older browsers: nothing to set */ }
+          return audioSessionState.type;
+        }
+        applyAmbientAudioSession();
+        window.__hhAudioSession = { state: audioSessionState, apply: applyAmbientAudioSession };
+        if (window.addEventListener) window.addEventListener("pointerdown", applyAmbientAudioSession, false);
 
         var STORAGE_KEY = "hh-character-select-player";
         var selected = null;
@@ -2250,6 +2299,7 @@ var NARRATION_CLIPS = [
             clipEl.addEventListener("error", onErr);
             try {
               if (typeof duckMusic === "function") duckMusic();
+              applyAmbientAudioSession();
               clipEl.src = CLIP_SRC[key];
               clipEl.onloadedmetadata = function () { if (clipEl.duration && isFinite(clipEl.duration)) CLIP_DUR[key] = clipEl.duration; };
               var pr = clipEl.play();
@@ -2413,6 +2463,14 @@ var NARRATION_CLIPS = [
         window.__hhFxLog = [];
         function playFxKey(key, creatureId) {
           return new Promise(function (resolve) {
+            /* Creature sounds are sound effects: when Sounds is off they
+               stay silent AND leave any narration in flight untouched. */
+            if (typeof deviceState !== "undefined" && deviceState.sfx === false) {
+              window.__hhFxLog.push({ key: key, creature: creatureId || null, ok: false, reason: "muted" });
+              if (window.__hhFxLog.length > 60) window.__hhFxLog.shift();
+              resolve(false);
+              return;
+            }
             speechToken++;
             if (speechTimer) { clearTimeout(speechTimer); speechTimer = null; }
             try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) { /* ignore */ }
@@ -2440,6 +2498,7 @@ var NARRATION_CLIPS = [
             clipEl.addEventListener("ended", onEnd);
             clipEl.addEventListener("error", onErr);
             try {
+              applyAmbientAudioSession();
               clipEl.src = FX_SRC[key];
               var pr = clipEl.play();
               if (pr && pr.catch) pr.catch(function () { finish(false, "blocked"); });
@@ -2470,7 +2529,7 @@ var NARRATION_CLIPS = [
         /* Family-shared Hangout activities also live on the device:
            acts lists the unlocked activity ids, actBy remembers which
            kid bought each one, and activity is the one last chosen. */
-        var deviceState = { setting: "park", music: true, acts: [], actBy: {}, activity: "ball" };
+        var deviceState = { setting: "park", music: true, sfx: true, acts: [], actBy: {}, activity: "ball" };
         (function loadDevice() {
           try {
             var rawD = localStorage.getItem(DEVICE_KEY);
@@ -2479,6 +2538,8 @@ var NARRATION_CLIPS = [
               if (parsedD && typeof parsedD === "object") {
                 if (typeof parsedD.setting === "string") deviceState.setting = parsedD.setting;
                 if (typeof parsedD.music === "boolean") deviceState.music = parsedD.music;
+                if (typeof parsedD.sfx === "boolean") deviceState.sfx = parsedD.sfx;
+                else if (deviceState.music === false) deviceState.sfx = false; /* legacy saves: music off used to silence the effects too, so keep them off until someone turns them on */
                 if (Array.isArray(parsedD.acts)) deviceState.acts = parsedD.acts.filter(function (x) { return typeof x === "string"; });
                 if (parsedD.actBy && typeof parsedD.actBy === "object" && !Array.isArray(parsedD.actBy)) deviceState.actBy = parsedD.actBy;
                 if (typeof parsedD.activity === "string") deviceState.activity = parsedD.activity;
@@ -3799,6 +3860,7 @@ var NARRATION_CLIPS = [
           if (name !== "park") { stopParkFx(); stopMusic(); }
           currentScreen = name;
           renderNotices();
+          if (typeof updateSoundBar === "function") updateSoundBar();
           var tabs = document.querySelectorAll("#tabs .tab");
           tabs.forEach(function (t) { t.classList.toggle("active", t.getAttribute("data-screen") === name); });
           Object.keys(screenEls).forEach(function (k) { screenEls[k].classList.toggle("show", k === name); });
@@ -6534,6 +6596,8 @@ var NARRATION_CLIPS = [
            active theme, scheduled-note log), not by ear. */
         var NOTE_ON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l10-2v13" fill="currentColor" stroke="none" opacity="0.9"/><circle cx="6.5" cy="18" r="2.8" fill="currentColor" stroke="none"/><circle cx="16.5" cy="16" r="2.8" fill="currentColor" stroke="none"/><path d="M15.5 8.5a5 5 0 010 7" opacity="0.7"/></svg>';
         var NOTE_OFF_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18V5l10-2v13" fill="currentColor" stroke="none" opacity="0.45"/><circle cx="6.5" cy="18" r="2.8" fill="currentColor" stroke="none" opacity="0.45"/><circle cx="16.5" cy="16" r="2.8" fill="currentColor" stroke="none" opacity="0.45"/><path d="M4 4l16 16" stroke-width="2.6"/></svg>';
+        var SPK_ON_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4V5z" fill="currentColor" stroke="none"/><path d="M15.5 8.5a5 5 0 010 7"/><path d="M18.2 6a9 9 0 010 12"/></svg>';
+        var SPK_OFF_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 5L6 9H3v6h3l5 4V5z" fill="currentColor" stroke="none" opacity="0.45"/><path d="M16 9l6 6M22 9l-6 6" stroke-width="2.4"/></svg>';
         var MUSIC_MELODY = [523.25, 587.33, 659.25, 783.99, 659.25, 587.33, 523.25, 0, 440.00, 523.25, 587.33, 659.25, 587.33, 523.25, 440.00, 0];
         var MUSIC_CHORDS = [[261.63, 329.63, 392.00], [220.00, 261.63, 329.63], [174.61, 220.00, 261.63], [196.00, 246.94, 293.66]];
         var MUSIC_THEMES = {
@@ -6601,6 +6665,7 @@ var NARRATION_CLIPS = [
         function musicEnsureCtx() {
           if (music.ctx) return true;
           try {
+            applyAmbientAudioSession();
             var AC = window.AudioContext || window.webkitAudioContext;
             if (!AC) return false;
             music.ctx = new AC();
@@ -6779,9 +6844,55 @@ var NARRATION_CLIPS = [
           deviceState.music = !!on;
           saveDevice();
           updateMusicBtn();
+          updateSoundBar();
           if (on) { music.startedByTap = true; startMusic(true); }
           else stopMusic();
         }
+        /* Sound effects have their own switch, separate from Music:
+           off silences the synthesized effects (playSfx) and the
+           creatures' recorded sounds (playFxKey). The narration voices
+           are NOT effects and always stay on, so Hudson's questions are
+           still read aloud either way. */
+        function setSfx(on) {
+          deviceState.sfx = !!on;
+          saveDevice();
+          updateSoundBar();
+          updateFxBtn();
+        }
+        window.__hhSetSfx = setSfx;
+        window.__hhSetMusic = setMusic;
+        /* The hub sound bar: one Music switch and one Sounds switch,
+           kept in sync with the Hangout's own buttons by every setter. */
+        function updateSoundBar() {
+          var mb = document.getElementById("soundMusicBtn");
+          if (mb) {
+            var mon = !!deviceState.music;
+            mb.innerHTML = (mon ? NOTE_ON_SVG : NOTE_OFF_SVG) + "<span>" + (mon ? "Music on" : "Music off") + "</span>";
+            mb.classList.toggle("off", !mon);
+            mb.setAttribute("aria-pressed", mon ? "true" : "false");
+          }
+          var fb = document.getElementById("soundFxBtn");
+          if (fb) {
+            var fon = deviceState.sfx !== false;
+            fb.innerHTML = (fon ? SPK_ON_SVG : SPK_OFF_SVG) + "<span>" + (fon ? "Sounds on" : "Sounds off") + "</span>";
+            fb.classList.toggle("off", !fon);
+            fb.setAttribute("aria-pressed", fon ? "true" : "false");
+          }
+        }
+        function updateFxBtn() {
+          var btn = document.getElementById("fxBtn");
+          if (!btn) return;
+          var on = deviceState.sfx !== false;
+          btn.innerHTML = (on ? SPK_ON_SVG : SPK_OFF_SVG) + "<span>" + (on ? "Sounds on" : "Sounds off") + "</span>";
+          btn.classList.toggle("off", !on);
+          btn.setAttribute("aria-pressed", on ? "true" : "false");
+        }
+        window.__hhSoundControls = {
+          music: function () { return !!deviceState.music; },
+          sfx: function () { return deviceState.sfx !== false; },
+          setMusic: setMusic,
+          setSfx: setSfx
+        };
         /* Ducking: while the speech engine is talking, the music drops to a
            whisper; it floats back up about 700ms after the voice finishes.
            Works on the shared master gain, so it applies in every place. */
@@ -6813,8 +6924,10 @@ var NARRATION_CLIPS = [
            Every effect shares the music engine's AudioContext, is kept
            short and quiet, ducks under the recorded narration exactly
            the way the music does (duckSfx is called from duckMusic),
-           and is gated by the same Music on/off setting: turn music
-           off and every effect is silent too.
+           and is gated by its own Sounds on/off setting, separate
+           from Music: turn sounds off and every effect (including the
+           creatures' recorded sounds) is silent, while the music and
+           the voices keep playing.
            Hudson's no-fail rule applies to sound as well: his wrong
            answers (and the demo's Kindergarten/1st-grade rounds, which
            share his gentle engine - round.young) get a soft low boop,
@@ -6828,7 +6941,7 @@ var NARRATION_CLIPS = [
           if (sfx.log.length > 80) sfx.log.shift();
         }
         function sfxReady() {
-          if (typeof deviceState === "undefined" || !deviceState.music) return false;
+          if (typeof deviceState === "undefined" || deviceState.sfx === false) return false;
           if (!musicEnsureCtx() || !music.ctx) return false;
           try { if (music.ctx.state === "suspended") music.ctx.resume(); } catch (e) { /* ignore */ }
           if (!sfx.gain) {
@@ -6899,7 +7012,7 @@ var NARRATION_CLIPS = [
           var scale = opts.vol || 1;
           var d0 = opts.delay || 0;
           if (!sfxReady()) {
-            sfxLog(name, false, (typeof deviceState !== "undefined" && !deviceState.music) ? "muted" : "no-audio");
+            sfxLog(name, false, (typeof deviceState !== "undefined" && deviceState.sfx === false) ? "muted" : "no-audio");
             return false;
           }
           try {
@@ -7405,7 +7518,8 @@ var NARRATION_CLIPS = [
           }).join("");
           var controls = '<div class="park-controls"><span class="place-label">Choose a place:</span>' + chips +
             '<span class="music-theme" id="musicTheme" aria-label="Music theme for this place"></span>' +
-            '<button type="button" class="music-btn' + (deviceState.music ? "" : " off") + '" id="musicBtn" aria-pressed="' + (deviceState.music ? "true" : "false") + '"></button></div>';
+            '<button type="button" class="music-btn' + (deviceState.music ? "" : " off") + '" id="musicBtn" aria-pressed="' + (deviceState.music ? "true" : "false") + '"></button>' +
+            '<button type="button" class="music-btn' + (deviceState.sfx === false ? " off" : "") + '" id="fxBtn" aria-pressed="' + (deviceState.sfx === false ? "false" : "true") + '"></button></div>';
           var actChips = availableActivities(s, setting).map(function (a) {
             return '<button type="button" class="place-chip' + (a.id === effAct ? " active" : "") + '" data-activity="' + a.id + '">' + a.name + "</button>";
           }).join("");
@@ -7481,6 +7595,8 @@ var NARRATION_CLIPS = [
           }
           screenEls.park.innerHTML = html;
           updateMusicBtn();
+          updateFxBtn();
+          updateSoundBar();
           /* The place decides the theme: returning to a place resumes its
              music, and a place switch mid-play swaps themes cleanly. */
           syncMusicTheme(setting.id, false);
@@ -7540,6 +7656,8 @@ var NARRATION_CLIPS = [
             else resetSelection();
             return;
           }
+          if (t.closest("#soundMusicBtn")) { setMusic(!deviceState.music); return; }
+          if (t.closest("#soundFxBtn")) { setSfx(deviceState.sfx === false); return; }
           if (t.closest("#giftOpenBtn")) { var ug = unclaimedGifts(selected); if (ug.length) openGift(ug[0]); return; }
           if (t.closest("#giftClaimBtn")) { claimGift(); return; }
           if (t.closest("#giftCloseBtn")) { closeGift(); return; }
@@ -7550,6 +7668,7 @@ var NARRATION_CLIPS = [
                place's theme is the one that starts, never the old one. */
             if (deviceState.music && !music.playing && !t.closest("[data-place]")) startMusic(true);
             if (t.closest("#musicBtn")) { setMusic(!deviceState.music); return; }
+            if (t.closest("#fxBtn")) { setSfx(deviceState.sfx === false); return; }
             var actChip = t.closest("[data-activity]");
             if (actChip) {
               var actId = actChip.getAttribute("data-activity");
