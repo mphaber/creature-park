@@ -3672,6 +3672,7 @@ var NARRATION_CLIPS = [
           if (s.accOwned.indexOf(gift.itemId) === -1) s.accOwned.push(gift.itemId);
           saveCurrent();
           renderWallet();
+          playSfx("sparkle");
           var item = giftItemById(gift.itemId);
           pendingGift = null;
           var ov = document.getElementById("giftOverlay");
@@ -4905,6 +4906,7 @@ var NARRATION_CLIPS = [
           if (btn.classList.contains("counted")) return;
           btn.classList.add("counted");
           currentQ.counted = (currentQ.counted || 0) + 1;
+          playSfx("tick", { n: currentQ.counted });
           var status = document.getElementById("earnStatus");
           if (currentQ.counted >= currentQ.total) {
             var ans = document.getElementById("answers");
@@ -4913,6 +4915,7 @@ var NARRATION_CLIPS = [
             var qt = document.querySelector(".qcard .qtext");
             if (qt) qt.textContent = currentQ.text;
             if (status) status.textContent = "You counted " + currentQ.total + "! Now tap the number " + currentQ.total + "!";
+            playSfx("correct-soft", { delay: 0.12 });
             speak("You did it! Tap the number " + currentQ.total + ".");
           } else {
             if (status) status.textContent = "You counted " + currentQ.counted + "... keep going!";
@@ -4930,6 +4933,7 @@ var NARRATION_CLIPS = [
             var praise = pickPraise();
             var msg;
             if (!round.missed) {
+              playSfx("correct");
               round.score++;
               round.earned++;
               var s = ensureSave(selected);
@@ -4942,7 +4946,7 @@ var NARRATION_CLIPS = [
               round.qAnswered = (round.qAnswered || 0) + 1;
               round.qFirstTry = (round.qFirstTry || 0) + 1;
               var starUp = starLevelUpBetween(qaBefore, s.questionsAnswered);
-              if (starUp) starParty = starUp;
+              if (starUp) { starParty = starUp; playSfx("sparkle", { delay: 0.25 }); }
               if (stHit) round.streakEarned = (round.streakEarned || 0) + stHit.bonus;
               if (qHit) round.qEarned = (round.qEarned || 0) + qHit;
               saveCurrent();
@@ -4966,6 +4970,7 @@ var NARRATION_CLIPS = [
                  (the wrong tap already reset it) — but the question was
                  seen through to its correct answer, so it still counts
                  toward the lifetime question milestones. */
+              playSfx("correct-soft");
               var sR = ensureSave(selected);
               var qaBeforeR = sR.questionsAnswered;
               var qHitR = countAnswered(sR);
@@ -4973,7 +4978,7 @@ var NARRATION_CLIPS = [
               sR.stats.answered++;
               round.qAnswered = (round.qAnswered || 0) + 1;
               var starUpR = starLevelUpBetween(qaBeforeR, sR.questionsAnswered);
-              if (starUpR) starParty = starUpR;
+              if (starUpR) { starParty = starUpR; playSfx("sparkle", { delay: 0.25 }); }
               saveCurrent();
               renderWallet();
               msg = praise + (selected === "hudson"
@@ -4999,6 +5004,12 @@ var NARRATION_CLIPS = [
             round.missed = true;
             btn.classList.add("tried");
             btn.disabled = true;
+            /* Sound follows the same gentle rule as the words: Hudson
+               and the young demo grades (round.young) hear a soft low
+               boop; only Hazel and the older demo grades hear the
+               small buzzer. */
+            if (selected === "hudson" || (round && round.young)) playSfx("wrong-gentle");
+            else playSfx("wrong-buzz");
             /* A wrong first tap quietly ends the streak: the counter
                simply starts again, with no failure framing — and for
                Hudson the break is never announced at all. */
@@ -5047,6 +5058,7 @@ var NARRATION_CLIPS = [
           }
           saveCurrent();
           renderWallet();
+          playSfx("jingle");
           renderRoundSummary();
         }
 
@@ -5332,6 +5344,8 @@ var NARRATION_CLIPS = [
             saveCurrent();
             renderWallet();
             refreshStreakPill(s);
+            playSfx("fanfare");
+            if (starUpB) playSfx("sparkle", { delay: 0.35 });
             var praise = pickPraise();
             msg = praise + " You won the Bonus Challenge and 30 Star Coins!";
             var sayB = praise + " You did it! You won the Bonus Challenge and 30 Star Coins.";
@@ -5363,6 +5377,8 @@ var NARRATION_CLIPS = [
             }, speechSettleMs(1800));
           } else {
             btn.classList.add("tried");
+            if (selected === "hudson" || (round && round.young)) playSfx("wrong-gentle");
+            else playSfx("wrong-buzz");
             /* A missed Bonus first tap also quietly ends the streak. The
                question still joins the answer statistics (answered, not
                first-try) and its round's recent record, but it never
@@ -5623,6 +5639,7 @@ var NARRATION_CLIPS = [
           renderWallet();
           shopMsg = a.name + " is yours! Find it in the Collection book to put it on.";
           renderShop();
+          playSfx("register");
           if (selected === "hudson") speak(a.name + " is yours now! Great work!");
         }
 
@@ -5661,6 +5678,7 @@ var NARRATION_CLIPS = [
             ? c.name + " is out playing in " + placeById(wentTo).name + " now."
             : placeById(homePlace).name + " is full, so " + c.name + " is resting in the stable. Swap " + (c.id === "kyoshi" || c.id === "katara" ? "her" : "them") + " in from the Collection book!");
           renderShop();
+          playSfx("register");
           if (selected === "hudson") speak(c.name + " is yours now! Great work!");
         }
 
@@ -5700,6 +5718,8 @@ var NARRATION_CLIPS = [
           var ix = s.favs.indexOf(id);
           if (ix === -1) s.favs.push(id); else s.favs.splice(ix, 1);
           saveCurrent();
+          if (ix === -1) playSfx("sparkle", { vol: 0.7 });
+          else playSfx("tick", { vol: 0.6 });
           renderCollection();
         }
         function sendToStable(id) {
@@ -6039,6 +6059,7 @@ var NARRATION_CLIPS = [
           renderWallet();
           shopMsg = pl.name + " is unlocked! Head to the Hangout tab and pick it any time.";
           renderShop();
+          playSfx("register");
           if (selected === "hudson") speak(pl.name + " is yours now! Great saving!");
         }
         function renderPlacesBook(s) {
@@ -6412,6 +6433,7 @@ var NARRATION_CLIPS = [
         function duckMusic() {
           if (!music.ctx || !music.gain) return;
           music.duckCount++;
+          if (typeof duckSfx === "function") duckSfx();
           music.lastDuckTheme = music.themeId;
           try {
             var t = music.ctx.currentTime;
@@ -6425,6 +6447,183 @@ var NARRATION_CLIPS = [
           } catch (e) { /* ignore */ }
         }
         window.__hhMusic = music;
+
+        /* ---------- Synthesized sound effects ----------
+           Small Web Audio effects (no audio files, so the single-file
+           export stays self-contained) that make the game feel alive:
+           a music-box chime for a correct answer, a cash register for
+           shop purchases, soft whooshes and catches in the Hangout, and
+           little pops, pats and twinkles for the other activities.
+           Every effect shares the music engine's AudioContext, is kept
+           short and quiet, ducks under the recorded narration exactly
+           the way the music does (duckSfx is called from duckMusic),
+           and is gated by the same Music on/off setting: turn music
+           off and every effect is silent too.
+           Hudson's no-fail rule applies to sound as well: his wrong
+           answers (and the demo's Kindergarten/1st-grade rounds, which
+           share his gentle engine - round.young) get a soft low boop,
+           never a buzzer. Only Hazel and the demo's older grades hear
+           the small buzzer. Every play is logged on window.__hhSfxLog
+           so the audit can verify the right effect fired. */
+        var sfx = { gain: null, noiseBuf: null, duckTimer: null, log: [] };
+        window.__hhSfxLog = sfx.log;
+        function sfxLog(name, played, reason) {
+          sfx.log.push({ name: name, played: played, reason: reason || "", t: Date.now() });
+          if (sfx.log.length > 80) sfx.log.shift();
+        }
+        function sfxReady() {
+          if (typeof deviceState === "undefined" || !deviceState.music) return false;
+          if (!musicEnsureCtx() || !music.ctx) return false;
+          try { if (music.ctx.state === "suspended") music.ctx.resume(); } catch (e) { /* ignore */ }
+          if (!sfx.gain) {
+            sfx.gain = music.ctx.createGain();
+            sfx.gain.gain.value = 1;
+            sfx.gain.connect(music.ctx.destination);
+          }
+          return true;
+        }
+        function duckSfx() {
+          if (!sfx.gain || !music.ctx) return;
+          try {
+            var t = music.ctx.currentTime;
+            sfx.gain.gain.cancelScheduledValues(t);
+            sfx.gain.gain.setTargetAtTime(0.3, t, 0.08);
+            if (sfx.duckTimer) clearTimeout(sfx.duckTimer);
+            sfx.duckTimer = setTimeout(function () {
+              if (!sfx.gain || !music.ctx) return;
+              try { sfx.gain.gain.setTargetAtTime(1, music.ctx.currentTime, 0.4); } catch (e) { /* ignore */ }
+            }, 700);
+          } catch (e) { /* ignore */ }
+        }
+        function sfxTone(freq, delay, dur, vol, type, slideTo) {
+          var t = music.ctx;
+          var when = t.currentTime + (delay || 0);
+          var osc = t.createOscillator();
+          var g = t.createGain();
+          osc.type = type || "sine";
+          osc.frequency.setValueAtTime(Math.max(30, freq), when);
+          if (slideTo) osc.frequency.exponentialRampToValueAtTime(Math.max(30, slideTo), when + dur);
+          g.gain.setValueAtTime(0.0001, when);
+          g.gain.exponentialRampToValueAtTime(Math.max(vol, 0.0002), when + 0.012);
+          g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+          osc.connect(g);
+          g.connect(sfx.gain);
+          osc.start(when);
+          osc.stop(when + dur + 0.05);
+        }
+        function sfxNoise(delay, dur, vol, fType, f0, f1, q) {
+          var t = music.ctx;
+          if (!sfx.noiseBuf) {
+            sfx.noiseBuf = t.createBuffer(1, t.sampleRate, t.sampleRate);
+            var d = sfx.noiseBuf.getChannelData(0);
+            for (var i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+          }
+          var when = t.currentTime + (delay || 0);
+          var src = t.createBufferSource();
+          src.buffer = sfx.noiseBuf;
+          src.loop = true;
+          src.playbackRate.value = 0.9 + Math.random() * 0.2;
+          var filt = t.createBiquadFilter();
+          filt.type = fType || "bandpass";
+          filt.Q.value = q || 1;
+          filt.frequency.setValueAtTime(Math.max(40, f0), when);
+          if (f1) filt.frequency.exponentialRampToValueAtTime(Math.max(40, f1), when + dur);
+          var g = t.createGain();
+          g.gain.setValueAtTime(0.0001, when);
+          g.gain.exponentialRampToValueAtTime(Math.max(vol, 0.0002), when + Math.min(0.05, dur / 3));
+          g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+          src.connect(filt);
+          filt.connect(g);
+          g.connect(sfx.gain);
+          src.start(when);
+          src.stop(when + dur + 0.05);
+        }
+        function playSfx(name, opts) {
+          opts = opts || {};
+          var scale = opts.vol || 1;
+          var d0 = opts.delay || 0;
+          if (!sfxReady()) {
+            sfxLog(name, false, (typeof deviceState !== "undefined" && !deviceState.music) ? "muted" : "no-audio");
+            return false;
+          }
+          try {
+            if (name === "correct") {
+              /* A bright little music-box chime: two bells, done. */
+              sfxTone(1318.51, d0, 0.5, 0.10 * scale);
+              sfxTone(1760.00, d0 + 0.09, 0.55, 0.09 * scale);
+              sfxTone(2637.02, d0 + 0.18, 0.3, 0.03 * scale);
+            } else if (name === "correct-soft") {
+              sfxTone(1318.51, d0, 0.45, 0.07 * scale);
+              sfxTone(1760.00, d0 + 0.08, 0.4, 0.05 * scale);
+            } else if (name === "fanfare") {
+              /* Bonus Challenge win: a rising arpeggio, then coins. */
+              var arp = [1046.50, 1318.51, 1567.98, 2093.00];
+              for (var ai = 0; ai < arp.length; ai++) sfxTone(arp[ai], d0 + ai * 0.07, 0.5, 0.085 * scale);
+              sfxTone(2637.02, d0 + 0.32, 0.12, 0.05 * scale);
+              sfxTone(2349.32, d0 + 0.40, 0.12, 0.05 * scale);
+              sfxTone(2637.02, d0 + 0.48, 0.2, 0.055 * scale);
+            } else if (name === "sparkle") {
+              /* Star Level ups, gifts and new favourites shimmer. */
+              var shim = [1567.98, 2093.00, 2637.02, 3135.96];
+              for (var si = 0; si < shim.length; si++) sfxTone(shim[si], d0 + si * 0.06, 0.55, 0.06 * scale);
+            } else if (name === "jingle") {
+              /* A short round-finish motif, warm triangle notes. */
+              var jig = [783.99, 987.77, 1174.66, 1567.98];
+              for (var ji = 0; ji < jig.length; ji++) sfxTone(jig[ji], d0 + ji * 0.11, 0.5, 0.075 * scale, "triangle");
+            } else if (name === "wrong-gentle") {
+              /* A soft low boop that slides down kindly: an "oops,
+                 try again" sound, never a failure sound. */
+              sfxTone(261.63, d0, 0.26, 0.09 * scale, "sine", 196.00);
+            } else if (name === "wrong-buzz") {
+              /* A small, soft buzzer: two short low pulses, kept quiet
+                 and lowpassed by the low square frequency itself. */
+              sfxTone(138, d0, 0.09, 0.05 * scale, "square");
+              sfxTone(138, d0 + 0.12, 0.10, 0.05 * scale, "square");
+            } else if (name === "register") {
+              /* Ka-ching: drawer clack, a bell ding, coins dropping. */
+              sfxNoise(d0, 0.05, 0.06 * scale, "highpass", 2200, null, 0.7);
+              sfxTone(1567.98, d0 + 0.03, 0.6, 0.10 * scale);
+              sfxTone(2093.00, d0 + 0.05, 0.45, 0.05 * scale);
+              sfxTone(2637.02, d0 + 0.11, 0.07, 0.05 * scale);
+              sfxTone(3135.96, d0 + 0.18, 0.07, 0.045 * scale);
+              sfxTone(2637.02, d0 + 0.25, 0.12, 0.04 * scale);
+            } else if (name === "whoosh-ball") {
+              sfxNoise(d0, 0.5, 0.035 * scale, "bandpass", 420, 980, 1.1);
+            } else if (name === "whoosh-frisbee") {
+              /* Airier and a touch longer, like a disc gliding. */
+              sfxNoise(d0, 0.65, 0.028 * scale, "bandpass", 720, 1480, 1.4);
+            } else if (name === "whoosh-soft") {
+              sfxNoise(d0, 0.45, 0.025 * scale, "bandpass", 320, 700, 1.1);
+            } else if (name === "catch") {
+              /* A soft thup as the receiver meets the ball. */
+              sfxTone(170, d0, 0.09, 0.055 * scale, "sine", 90);
+              sfxNoise(d0, 0.05, 0.028 * scale, "lowpass", 500, null, 0.7);
+            } else if (name === "pop") {
+              sfxTone(480, d0, 0.07, 0.07 * scale, "sine", 920);
+              sfxNoise(d0, 0.02, 0.02 * scale, "highpass", 3200, null, 0.7);
+            } else if (name === "tick") {
+              /* Counting along: each counted star blips a step higher. */
+              var n = Math.max(1, Math.min(12, opts.n || 1));
+              sfxTone(620 + (n - 1) * 70, d0, 0.09, 0.055 * scale);
+            } else if (name === "pat") {
+              sfxTone(140, d0, 0.08, 0.05 * scale, "sine", 80);
+              sfxTone(140, d0 + 0.13, 0.08, 0.045 * scale, "sine", 80);
+            } else if (name === "twinkle") {
+              var tw = [2093.00, 2637.02, 3135.96][Math.floor(Math.random() * 3)];
+              sfxTone(tw, d0, 0.7, 0.04 * scale);
+              sfxTone(tw, d0 + 0.18, 0.5, 0.018 * scale);
+            } else if (name === "gust") {
+              /* A soft breath of wind for the kite. */
+              sfxNoise(d0, 1.5, 0.02 * scale, "lowpass", 260, 480, 0.6);
+            } else {
+              sfxLog(name, false, "unknown");
+              return false;
+            }
+            sfxLog(name, true, "");
+            return true;
+          } catch (e) { sfxLog(name, false, "error"); return false; }
+        }
+        window.__hhSfx = { play: playSfx, log: sfx.log, state: sfx };
 
         /* ---------- Hangout activities ----------
            Ball Catch is the free default. Frisbee Fun, Bubble Party and
@@ -6495,6 +6694,7 @@ var NARRATION_CLIPS = [
           renderWallet();
           shopMsg = a.name + " is unlocked for the whole family! Head to the Hangout to play.";
           renderShop();
+          playSfx("register");
           if (selected === "hudson") speak(a.name + " is yours now! The whole family can play!");
         }
         /* Scene effects for the non-projectile activities. Creatures
@@ -6529,6 +6729,7 @@ var NARRATION_CLIPS = [
               var a = randomActor();
               if (a && !reduced && Math.random() < 0.8) {
                 rallyHop(a);
+                if (Math.random() < 0.75) playSfx("pop");
                 if (a.getAttribute("data-park-actor") && Math.random() < 0.5) parkShowBubble(a, "Pop!");
               }
             };
@@ -6538,6 +6739,7 @@ var NARRATION_CLIPS = [
             var cheer = function () {
               var a = randomActor();
               if (!a || reduced) return;
+              if (Math.random() < 0.4) playSfx("gust");
               if (Math.random() < 0.6) parkShowBubble(a, pickOf(["Look at the kite!", "So high!", "Whee!", "Fly, kite, fly!"]));
               else rallyHop(a);
             };
@@ -6555,6 +6757,7 @@ var NARRATION_CLIPS = [
                 setTimeout(function () {
                   castle.classList.remove("crumble");
                   castle.classList.add("rebuild");
+                  playSfx("pat");
                   setTimeout(function () { castle.classList.remove("rebuild"); }, 650);
                 }, 2300);
               }
@@ -6569,6 +6772,7 @@ var NARRATION_CLIPS = [
               cEl.setAttribute("aria-hidden", "true");
               cEl.style.top = (4 + Math.random() * 20) + "%";
               scene.appendChild(cEl);
+              if (Math.random() < 0.55) playSfx("twinkle");
               setTimeout(function () { if (cEl.parentNode) cEl.parentNode.removeChild(cEl); }, 3000);
               var a = randomActor();
               if (a && !reduced) {
@@ -6695,7 +6899,14 @@ var NARRATION_CLIPS = [
           var A = rallySpot(fromEl), B = rallySpot(toEl);
           var dur = 850 + Math.random() * 450;
           var start = null;
-          if (rally.ballEl) rally.ballEl.classList.add("flying");
+          if (rally.ballEl) {
+            rally.ballEl.classList.add("flying");
+            /* A soft whoosh as the throw leaves: airy for the frisbee,
+               gentler still for snowballs and pumpkins. */
+            if (rally.ballEl.classList.contains("act-frisbee")) playSfx("whoosh-frisbee");
+            else if (rally.ballEl.classList.contains("act-pumpkin") || rally.ballEl.classList.contains("snowball")) playSfx("whoosh-soft");
+            else playSfx("whoosh-ball");
+          }
           var frame = function (ts) {
             if (!rally.active) return;
             if (!start) start = ts;
@@ -6707,6 +6918,7 @@ var NARRATION_CLIPS = [
             rally.raf = null;
             if (rally.ballEl) rally.ballEl.classList.remove("flying");
             rallyHop(toEl);
+            playSfx("catch");
             done();
           };
           rally.raf = requestAnimationFrame(frame);
