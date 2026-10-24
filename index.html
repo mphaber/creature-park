@@ -1469,7 +1469,8 @@
               { icon: "times", text: "Multiplication quests and number challenges" },
               { icon: "pencil", text: "Word problems and spelling practice" },
               { icon: "puzzle", text: "Logic puzzles, longer quests, and collectibles" },
-              { icon: "book", text: "Space, science, and nature & animal questions in every round" }
+              { icon: "book", text: "Space, science, and nature & animal questions in every round" },
+              { icon: "heart", text: "Fire safety lessons from the Norwell Fire Dept in every round" }
             ],
             note: "Hazel reads everything herself, so her game skips the narration and goes straight to the good stuff."
           },
@@ -4412,37 +4413,34 @@ var NARRATION_CLIPS = [
              so every round carries one "wonder" slot drawn from those
              three kinds - guaranteed, not left to chance. */
           plan.push(pickOf(["space", "science", "nature"]));
-          /* School-unit anchor (Levels 1-3 especially): one compare/place-value
-             question and one addition/standard-form question in every round. */
-          plan.push(pickOf(["compare", "place-value"]));
-          plan.push(pickOf(["addition", "standard-form"]));
-          /* Third maths slot: new variety types plus core types. */
-          if (L <= 3) {
+          /* This week's fourth-grade focus: fire safety, from the
+             Norwell Fire Dept presentation at school. One fire safety
+             question is guaranteed in every round, with its own
+             category label. */
+          plan.push("fire-safety");
+          /* This week's fourth-grade schoolwork, folded in the same way:
+             one "school" slot in every round, drawn from the five senses,
+             OREO opinion writing, adjectives, animal structures and maps. */
+          plan.push(pickOf(["senses", "opinion", "adjectives", "structures", "maps"]));
+          /* Core maths anchor: one of compare / place-value / addition /
+             standard form in every round. (The two older anchors now share
+             this one slot, so all four still turn up regularly alongside
+             the maths variety and flex slots below.) */
+          plan.push(pickOf(["compare", "place-value", "addition", "standard-form"]));
+          /* Fifth slot: with wonder, fire safety, school and the core
+             maths anchor taking the first four slots, the last slot
+             flexes - about a third of rounds get a language question
+             (vocab, spelling, grammar or reading), the rest get a
+             maths variety question (new types plus core types). */
+          var flexRoll = Math.random();
+          if (flexRoll < 0.34) {
+            plan.push(pickOf(["vocab", "spelling", "grammar", "reading"]));
+          } else if (L <= 3) {
             plan.push(pickOf(["division", "estimation", "addition", "compare", "place-value", "standard-form", "mult", "word", "money", "missing"]));
           } else if (L <= 5) {
             plan.push(pickOf(["division", "estimation", "compare", "place-value", "mult", "word", "fraction-compare", "fraction-of", "word2", "sequence", "addition", "standard-form", "money", "time", "missing", "multiples", "perimeter", "fraction-add"]));
           } else {
             plan.push(pickOf(["division", "estimation", "mult", "word", "fraction-compare", "fraction-of", "word2", "sequence", "compare", "place-value", "money", "time", "missing", "multiples", "perimeter", "fraction-add"]));
-          }
-          /* The fifth slot: about half of rounds get a language question
-             (vocab, spelling, grammar or reading), the rest get one more
-             maths question, school-weighted at low levels and keeping
-             multiplication (mult + mult word problems) to at most 2. */
-          if (Math.random() < 0.5) {
-            plan.push(pickOf(["vocab", "spelling", "grammar", "reading"]));
-          } else {
-            var fillLow = ["addition", "standard-form", "compare", "place-value", "division", "estimation", "mult", "word", "money", "missing", "multiples"];
-            var fillHigh = ["addition", "standard-form", "compare", "place-value", "division", "estimation", "mult", "word", "fraction-compare", "fraction-of", "word2", "sequence", "money", "time", "missing", "multiples", "perimeter", "fraction-add"];
-            var fillPool = L <= 3 ? fillLow : fillHigh;
-            var cand5 = null, guard = 0;
-            while (guard++ < 60) {
-              var cand = pickOf(fillPool);
-              if ((cand === "mult" || cand === "word") &&
-                  plan.filter(function (x) { return x === "mult" || x === "word"; }).length >= 2) continue;
-              cand5 = cand;
-              break;
-            }
-            plan.push(cand5 || pickOf(["addition", "compare", "place-value", "division", "estimation"]));
           }
           return shuffled(plan.slice(0, 5));
         }
@@ -4646,6 +4644,121 @@ var NARRATION_CLIPS = [
           { q: "Why does a snowshoe hare's fur turn white in winter?", a: "To blend in with the snow", d: ["To stay cooler", "To scare away foxes"] },
           { q: "What is it called when a bear sleeps through the whole winter?", a: "Hibernation", d: ["Migration", "Metamorphosis"] }
         ];
+        /* Hazel's school banks, from her fourth-grade classroom this week:
+           the five senses (including the eye-dilation experiment), OREO
+           opinion paragraphs and writing about a role model, adjectives
+           and the nouns they describe, animal structures, and maps.
+           hazelPlan guarantees one of these five kinds in every round,
+           and each shows its own category label. */
+        var SENSES_BANK = [
+          { q: "How many senses do you have?", a: "Five", d: ["Four", "Six"] },
+          { q: "Which sense do you use your eyes for?", a: "Sight", d: ["Hearing", "Taste"] },
+          { q: "Which sense do you use your ears for?", a: "Hearing", d: ["Smell", "Touch"] },
+          { q: "Which part of your body has the taste buds?", a: "Your tongue", d: ["Your nose", "Your ears"] },
+          { q: "Which sense organ gives you your sense of touch?", a: "Your skin", d: ["Your hair", "Your eyes"] },
+          { q: "In dim light, your pupils dilate. What does that mean they do?", a: "Get bigger, so more light can get in", d: ["Get smaller, so less light gets in", "Change colour"] },
+          { q: "What do your pupils do in very bright light?", a: "Get smaller", d: ["Get bigger", "Close your eyes for you"] },
+          { q: "Which part of the eye is the dark opening that lets light in?", a: "The pupil", d: ["The eyelid", "The eyebrow"] },
+          { q: "Which part of the eye changes size to control the pupil?", a: "The iris", d: ["The eyelashes", "The tear duct"] },
+          { q: "You smell a skunk before you can see it. Which sense warned you?", a: "Smell", d: ["Sight", "Taste"] },
+          { q: "You close your eyes and touch a pinecone. It feels rough and prickly. Which sense told you that?", a: "Touch", d: ["Taste", "Sight"] },
+          { q: "Which two senses work together to give food its full flavour?", a: "Smell and taste", d: ["Sight and hearing", "Touch and sight"] },
+          { q: "Which sense would you mostly use to check whether bath water is too hot?", a: "Touch", d: ["Taste", "Smell"] },
+          { q: "A friend whispers a secret so quietly that only you can hear it. Which sense are you using most?", a: "Hearing", d: ["Smell", "Touch"] }
+        ];
+        var OPINION_BANK = [
+          { q: "In an OREO paragraph, what does the first O stand for?", a: "Opinion - say what you think", d: ["Once upon a time", "Object - name a thing"] },
+          { q: "In an OREO paragraph, what does the R stand for?", a: "Reason", d: ["Reading", "Rhyme"] },
+          { q: "In an OREO paragraph, what does the E stand for?", a: "Explanation - explain your reason, often with an example", d: ["Ending", "Excitement"] },
+          { q: "In an OREO paragraph, what does the last O stand for?", a: "Opinion again - restate what you think", d: ["A brand-new topic", "The title"] },
+          { q: "Which sentence is an opinion?", a: "Dogs make the best pets.", d: ["Dogs have four legs.", "Many dogs help people work."] },
+          { q: "Which of these is a fact, not an opinion?", a: "A week has seven days.", d: ["Summer is the best season.", "Pizza tastes better than salad."] },
+          { q: "Which words often show that a sentence is an opinion?", a: "\u201CI believe...\u201D", d: ["\u201CIt was measured...\u201D", "\u201CThe chart shows...\u201D"] },
+          { q: "In an opinion paragraph, what job does a reason do?", a: "It tells why you think that way", d: ["It ends the paragraph", "It names the title"] },
+          { q: "An explanation often gives an example. Which words could start one?", a: "For example...", d: ["The end.", "Once upon a time..."] },
+          { q: "Hazel writes about her role model. To make it an opinion piece, what must she do?", a: "Explain why that person is her role model", d: ["Only list facts about the person", "Copy the person's own words"] },
+          { q: "Which sentence would make the best opening for an opinion paragraph?", a: "I think every class should have a class pet.", d: ["Fish live in water.", "Our classroom has a window."] },
+          { q: "Why do writers restate their opinion at the end of an OREO paragraph?", a: "To remind the reader what they think", d: ["To sneak in a new idea", "To make the paragraph longer"] }
+        ];
+        var ADJECTIVE_BANK = [
+          { q: "What does an adjective do?", a: "It describes a noun", d: ["It names an action", "It joins two sentences"] },
+          { q: "In the sentence \u201CThe fluffy cat napped\u201D, which word is the adjective?", a: "fluffy", d: ["cat", "napped"] },
+          { q: "In the sentence \u201CThree loud geese honked\u201D, which words are the adjectives?", a: "Three and loud", d: ["geese and honked", "honked and three"] },
+          { q: "An adjective gives more information about which kind of word?", a: "A noun", d: ["A verb", "A full stop"] },
+          { q: "Which word is an adjective?", a: "gigantic", d: ["quickly", "giggle"] },
+          { q: "Adjectives can answer which questions about a noun?", a: "What kind is it? How many are there?", d: ["Who did it?", "What happened next?"] },
+          { q: "To compare two winters, which adjective works best?", a: "colder", d: ["cold", "coldest"] },
+          { q: "In the sentence \u201CThe old lighthouse stood on the rocky shore\u201D, which words are adjectives?", a: "old and rocky", d: ["stood and shore", "the and on"] },
+          { q: "In the sentence \u201CHudson counted seven shells\u201D, which word is the adjective?", a: "seven", d: ["counted", "shells"] },
+          { q: "Which sentence uses an adjective to describe a noun?", a: "The brave firefighter climbed the ladder.", d: ["The firefighter climbed brave.", "The firefighter bravely ladder."] },
+          { q: "Which adjective best completes the sentence? \u201CIt was a ___ day for a picnic.\u201D", a: "sunny", d: ["sunnily", "sun"] },
+          { q: "In the sentence \u201CShe wore a sparkly red dress\u201D, which words are the adjectives?", a: "sparkly and red", d: ["wore and she", "red and wore"] }
+        ];
+        var STRUCTURE_BANK = [
+          { q: "In science, what is a structure?", a: "A part of an animal's body", d: ["A place where an animal lives", "A kind of food an animal eats"] },
+          { q: "What do scientists call the job that a structure does?", a: "Its function", d: ["Its colour", "Its nickname"] },
+          { q: "Why does a duck have webbed feet?", a: "To push through the water and swim well", d: ["To run faster on land", "To climb trees"] },
+          { q: "A turtle's hard shell is a structure. What is its function?", a: "It keeps the turtle safe from predators", d: ["It helps the turtle swim faster", "It helps the turtle find food"] },
+          { q: "Why does an owl have sharp talons?", a: "To grab and hold its food", d: ["To dig burrows", "To paddle through water"] },
+          { q: "A giraffe's long neck is a structure that helps it do what?", a: "Reach leaves high up in trees", d: ["Hide in short grass", "Hear quiet sounds"] },
+          { q: "Which structure lets a fish breathe underwater?", a: "Its gills", d: ["Its fins", "Its tail"] },
+          { q: "An eagle's hooked beak is a good structure for doing what?", a: "Tearing meat", d: ["Sipping nectar from flowers", "Scooping up water"] },
+          { q: "A hummingbird's long, thin beak helps it do what?", a: "Reach nectar deep inside flowers", d: ["Crack hard nuts", "Dig in the mud"] },
+          { q: "A snowshoe hare's fur turns white in winter. How does that structure help it survive?", a: "It blends in with the snow, so predators can't spot it", d: ["It makes the hare run faster", "It helps the hare find food"] },
+          { q: "What is the function of a porcupine's sharp quills?", a: "They protect it from predators", d: ["They help it climb trees", "They keep it dry in the rain"] },
+          { q: "An elephant's trunk is a structure that helps it do what?", a: "Pick up food and squirt water", d: ["See far away", "Dig tunnels"] },
+          { q: "A penguin's flippers are structures that help it do what?", a: "Swim through the water", d: ["Fly through the air", "Dig in the sand"] },
+          { q: "A lion's sharp teeth are a structure made for what job?", a: "Tearing and eating meat", d: ["Grinding up grass", "Cracking tiny seeds"] },
+          { q: "A polar bear's thick fur and fat help it survive by doing what?", a: "Keeping it warm in the freezing Arctic", d: ["Helping it float like a boat", "Making it invisible"] }
+        ];
+        var MAP_BANK = [
+          { q: "What does a compass rose on a map show?", a: "The directions", d: ["The weather", "How old the map is"] },
+          { q: "What are the four cardinal directions?", a: "North, south, east and west", d: ["Up, down, left and right", "Spring, summer, autumn and winter"] },
+          { q: "On most maps, which direction is at the top?", a: "North", d: ["South", "East"] },
+          { q: "What does a map key (also called a legend) do?", a: "It explains what the symbols on the map mean", d: ["It locks the map shut", "It shows tomorrow's weather"] },
+          { q: "On many maps, a star symbol stands for what?", a: "A capital city", d: ["A mountain", "A river"] },
+          { q: "The library is north of your school. On the map, where is the library?", a: "Above the school, toward the top of the map", d: ["Below the school", "Inside the school"] },
+          { q: "The sun rises in which direction?", a: "East", d: ["West", "North"] },
+          { q: "The sun sets in which direction?", a: "West", d: ["East", "South"] },
+          { q: "What does a map's title tell you?", a: "What the map shows", d: ["The weather on the day it was drawn", "How tall the buildings are"] },
+          { q: "What does a map scale help you work out?", a: "How far apart places really are", d: ["What colour to draw a river", "How deep a lake is"] },
+          { q: "Halfway between north and east on a compass is which direction?", a: "Northeast", d: ["Southwest", "Northwest"] },
+          { q: "On many maps, blue lines and blue shapes stand for what?", a: "Water, like rivers and lakes", d: ["Roads", "Forests"] }
+        ];
+        /* Fire safety, from the Norwell Fire Dept presentation in
+           Hazel's fourth-grade class this week. Covers the lessons
+           school visits teach every year: smoke alarms, an escape
+           plan with two ways out and a meeting place, Get Low and
+           Go, Stop Drop and Roll, calling 911, never hiding and
+           never going back inside, and firefighters as helpers. */
+        var FIRE_SAFETY_BANK = [
+          { q: "If your clothes ever catch on fire, what should you do?", a: "Stop, Drop, and Roll", d: ["Run as fast as you can", "Wave your arms to blow it out"] },
+          { q: "Your room fills with smoke. The clearest air is down low. What should you do?", a: "Get low and go - crawl low under the smoke", d: ["Stand up tall and hold your breath", "Hide under your bed"] },
+          { q: "How many ways out should you know from every room in your home?", a: "Two ways out", d: ["Just one way out", "As many as five ways out"] },
+          { q: "If there is a fire at home, where should your whole family meet outside?", a: "At your family meeting place, like the mailbox or a big tree", d: ["Back inside by the front door", "At a friend's house down the street"] },
+          { q: "Once you get outside during a fire, what should you do?", a: "Stay outside and never go back in", d: ["Go back in for your favourite toy", "Go back in to look for a pet"] },
+          { q: "Which number do you call in a fire emergency?", a: "911", d: ["411", "The school office"] },
+          { q: "When you call 911 in a fire, what should you be ready to tell them?", a: "Your name, your address, and that there is a fire", d: ["Only your first name", "What you had for lunch"] },
+          { q: "How often should grown-ups test the smoke alarms at home?", a: "Once a month", d: ["Once a year", "Only when they beep"] },
+          { q: "You hear the smoke alarm beeping at home. What does that sound mean?", a: "Get out and stay out - there may be a fire", d: ["It is time for dinner", "The battery is just being silly"] },
+          { q: "Where is the safest place for a smoke alarm in a home?", a: "In every bedroom, outside sleeping areas, and on every level", d: ["Only in the kitchen", "Only in the garage"] },
+          { q: "Before you open a closed door in a fire, how should you check if it is safe?", a: "Feel it with the back of your hand - if it is hot, use another way out", d: ["Kick it open as fast as you can", "Open it wide and peek through the smoke"] },
+          { q: "You find matches or a lighter on the ground. What should you do?", a: "Don't touch them - tell a grown-up right away", d: ["Pick them up and try them out", "Hide them in your pocket"] },
+          { q: "Why should you never hide in a closet or under a bed during a fire?", a: "Firefighters can't find you if you hide", d: ["Closets are too dusty", "It is too dark to read in there"] },
+          { q: "A firefighter in full gear, with a mask and a loud breathing pack, comes toward you in a fire. What should you do?", a: "Go to them and shout so they can find you - they are there to help", d: ["Run away and hide because the gear looks scary", "Stay quiet so they walk past"] },
+          { q: "During a fire drill at school, what should you do?", a: "Stay calm, walk quietly with your class, and listen to your teacher", d: ["Run back inside for your backpack", "Race your friends to be first outside"] },
+          { q: "How far should toys, curtains and furniture stay from a space heater?", a: "At least 3 feet away", d: ["Right up against it", "About 1 inch away"] },
+          { q: "Someone gets a small burn. What is the best first thing to do?", a: "Cool it under cool - not cold - running water", d: ["Put butter on it", "Cover it with a hot towel"] },
+          { q: "Why does closing your bedroom door at night help keep you safe?", a: "A closed door slows down fire and smoke", d: ["It keeps the room warmer", "It stops the smoke alarm from beeping"] }
+        ];
+        var SCHOOL_BANKS = {
+          senses: { bank: SENSES_BANK, cat: "Our Five Senses" },
+          opinion: { bank: OPINION_BANK, cat: "Opinion Writing" },
+          adjectives: { bank: ADJECTIVE_BANK, cat: "Adjectives" },
+          structures: { bank: STRUCTURE_BANK, cat: "Animal Structures" },
+          maps: { bank: MAP_BANK, cat: "Maps" },
+          "fire-safety": { bank: FIRE_SAFETY_BANK, cat: "Fire Safety" }
+        };
         function makeHazelQuestion(kind, L) {
           L = L || 1;
           if (kind === "addition") {
@@ -4806,6 +4919,11 @@ var NARRATION_CLIPS = [
             var wCat = kind === "space" ? "Space" : kind === "nature" ? "Nature & Animals" : "Science";
             var sc = pickOf(wBank);
             return { kind: kind, category: wCat, answer: sc.a, text: sc.q, spoken: sc.q, options: strOpts(sc.a, sc.d) };
+          }
+          if (SCHOOL_BANKS[kind]) {
+            var sbk = SCHOOL_BANKS[kind];
+            var sq2 = pickOf(sbk.bank);
+            return { kind: kind, category: sbk.cat, answer: sq2.a, text: sq2.q, spoken: sq2.q, options: strOpts(sq2.a, sq2.d) };
           }
           if (kind === "money") {
             if (Math.random() < 0.5) {
@@ -5000,9 +5118,12 @@ var NARRATION_CLIPS = [
           "place-value": "Place Value", "addition": "Addition", "standard-form": "Standard Form",
           "fraction-compare": "Fractions", "fraction-of": "Fractions", "sequence": "Patterns",
           "vocab": "Word Power", "spelling": "Spelling", "grammar": "Grammar",
-          "reading": "Reading", "science": "Science", "space": "Space", "nature": "Nature & Animals"
+          "reading": "Reading", "science": "Science", "space": "Space", "nature": "Nature & Animals",
+          "senses": "Our Five Senses", "opinion": "Opinion Writing", "adjectives": "Adjectives",
+          "structures": "Animal Structures", "maps": "Maps", "fire-safety": "Fire Safety"
         };
         window.__hhWonder = { space: SPACE_BANK, science: SCIENCE_BANK, nature: NATURE_BANK, plan: hazelPlan, make: makeHazelQuestion };
+        window.__hhSchool = { senses: SENSES_BANK, opinion: OPINION_BANK, adjectives: ADJECTIVE_BANK, structures: STRUCTURE_BANK, maps: MAP_BANK, fireSafety: FIRE_SAFETY_BANK };
         /* ---------- No-repeat question memory ----------
            Every served question gets a stable signature (its type plus its
            exact content: numbers, word, passage). Signatures are saved per
