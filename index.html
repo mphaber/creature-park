@@ -4799,7 +4799,11 @@ var NARRATION_CLIPS = [
           ["sun", "S"], ["cat", "C"], ["dog", "D"], ["apple", "A"], ["ball", "B"],
           ["fish", "F"], ["moon", "M"], ["pig", "P"], ["egg", "E"], ["hat", "H"],
           ["ant", "A"], ["bear", "B"], ["cow", "C"], ["duck", "D"], ["frog", "F"],
-          ["goat", "G"], ["hen", "H"], ["mouse", "M"], ["pizza", "P"], ["sock", "S"], ["turtle", "T"]
+          ["goat", "G"], ["hen", "H"], ["mouse", "M"], ["pizza", "P"], ["sock", "S"], ["turtle", "T"],
+          ["igloo", "I"], ["insect", "I"], ["inch", "I"],
+          ["nest", "N"], ["nose", "N"], ["nut", "N"],
+          ["octopus", "O"], ["orange", "O"], ["otter", "O"],
+          ["umbrella", "U"], ["up", "U"], ["under", "U"]
         ];
         var HUD_WORDS_HARD = [
           ["giraffe", "G"], ["zebra", "Z"], ["queen", "Q"], ["umbrella", "U"], ["tiger", "T"],
@@ -4807,7 +4811,7 @@ var NARRATION_CLIPS = [
           ["whale", "W"], ["orange", "O"], ["vase", "V"], ["yo-yo", "Y"],
           ["igloo", "I"], ["panda", "P"], ["snake", "S"], ["mango", "M"], ["cactus", "C"], ["donut", "D"], ["eagle", "E"]
         ];
-        var HUD_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "M", "P", "S", "T"];
+        var HUD_LETTERS = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "M", "N", "O", "P", "S", "T", "U"];
         var HUD_COUNT_OBJECTS = [
           { name: "star", plural: "stars", svg: STAR_SVG },
           { name: "heart", plural: "hearts", svg: shapeSVG("heart", "#e14b73") },
@@ -5014,11 +5018,12 @@ var NARRATION_CLIPS = [
           /* Fifth slot: with wonder, fire safety, school and the core
              maths anchor taking the first four slots, the last slot
              flexes - about a third of rounds get a language question
-             (vocab, spelling, grammar or reading), the rest get a
-             maths variety question (new types plus core types). */
+             (vocab, spelling, grammar, reading or story parts), the
+             rest get a maths variety question (new types plus core
+             types). */
           var flexRoll = Math.random();
           if (flexRoll < 0.34) {
-            plan.push(pickOf(["vocab", "spelling", "grammar", "reading"]));
+            plan.push(pickOf(["vocab", "spelling", "grammar", "reading", "story"]));
           } else if (L <= 3) {
             plan.push(pickOf(["division", "estimation", "addition", "compare", "place-value", "standard-form", "mult", "word", "money", "missing"]));
           } else if (L <= 5) {
@@ -5335,7 +5340,29 @@ var NARRATION_CLIPS = [
           { q: "Someone gets a small burn. What is the best first thing to do?", a: "Cool it under cool - not cold - running water", d: ["Put butter on it", "Cover it with a hot towel"] },
           { q: "Why does closing your bedroom door at night help keep you safe?", a: "A closed door slows down fire and smoke", d: ["It keeps the room warmer", "It stops the smoke alarm from beeping"] }
         ];
+        /* Story parts, from the Oct 23 school newsletters: the five
+           parts of a story - characters, setting, beginning, middle
+           and end. Written in the same style as the reading questions
+           (some with a short story passage to read first), and wired
+           into the same language rotation as reading in hazelPlan, so
+           Hazel and the demo grades 2-5 meet them the same way they
+           meet reading questions. Hudson's rounds never include them. */
+        var STORY_PARTS_BANK = [
+          { q: "Who are the characters in a story?", a: "The people or animals the story is about", d: ["The place where the story happens", "The very end of the story"] },
+          { q: "What is the setting of a story?", a: "Where and when the story happens", d: ["Who is in the story", "What happens at the very end"] },
+          { q: "What do we usually learn at the beginning of a story?", a: "Who the characters are and where the story happens", d: ["How the problem is solved", "The very last thing that happens"] },
+          { q: "What often happens in the middle of a story?", a: "The characters face a problem or try something new", d: ["We meet the characters for the first time", "The story finishes and closes"] },
+          { q: "What happens at the end of a story?", a: "The problem is solved and the story finishes", d: ["We meet the characters for the first time", "The characters face their biggest problem"] },
+          { q: "A story is put together in which order?", a: "Beginning, middle, then end", d: ["End, beginning, then middle", "Middle, end, then beginning"] },
+          { p: "Pip the pup lived in a red barn on a farm. One morning, Pip heard a tiny chick peeping for help by the fence.", q: "Who is a character in this story?", a: "Pip the pup", d: ["The red barn", "The morning"] },
+          { p: "Pip the pup lived in a red barn on a farm. One morning, Pip heard a tiny chick peeping for help by the fence.", q: "What is the setting of this story?", a: "A farm with a red barn", d: ["A boat on the ocean", "A castle on a mountain"] },
+          { p: "At the start of the story, Zara put on her rain boots and grabbed her umbrella. Dark clouds were rolling in.", q: "What happens at the beginning of this story?", a: "Zara gets ready to go out in the rain", d: ["Zara comes back home and dries off", "Zara builds a snowman in the garden"] },
+          { p: "Ben planted a bean seed and watered it every day. In the middle of the story, a green sprout popped up, but a hungry rabbit started nibbling its leaves.", q: "What happens in the middle of this story?", a: "A rabbit nibbles the new sprout", d: ["Ben plants the bean seed", "Ben picks tall beans for dinner"] },
+          { p: "Mia lost her favourite mitten on the way to school. She looked in her bag and under her desk. At the end of the story, her friend Sam found it on the playground and gave it back.", q: "What happens at the end of this story?", a: "Sam finds the mitten and gives it back", d: ["Mia loses her mitten", "Mia looks under her desk"] },
+          { p: "Three little goats lived by a grassy hill. One day they decided to cross the bridge to find sweeter grass on the other side.", q: "What is the setting of this story?", a: "By a grassy hill with a bridge", d: ["Inside a busy airport", "Deep under the sea"] }
+        ];
         var SCHOOL_BANKS = {
+          story: { bank: STORY_PARTS_BANK, cat: "Story Parts" },
           senses: { bank: SENSES_BANK, cat: "Our Five Senses" },
           opinion: { bank: OPINION_BANK, cat: "Opinion Writing" },
           adjectives: { bank: ADJECTIVE_BANK, cat: "Adjectives" },
@@ -5507,7 +5534,7 @@ var NARRATION_CLIPS = [
           if (SCHOOL_BANKS[kind]) {
             var sbk = SCHOOL_BANKS[kind];
             var sq2 = pickOf(sbk.bank);
-            return { kind: kind, category: sbk.cat, answer: sq2.a, text: sq2.q, spoken: sq2.q, options: strOpts(sq2.a, sq2.d) };
+            return { kind: kind, category: sbk.cat, answer: sq2.a, text: sq2.q, spoken: sq2.q, visual: sq2.p ? '<div class="q-passage">' + sq2.p + "</div>" : "", options: strOpts(sq2.a, sq2.d) };
           }
           if (kind === "money") {
             if (Math.random() < 0.5) {
@@ -5704,10 +5731,10 @@ var NARRATION_CLIPS = [
           "vocab": "Word Power", "spelling": "Spelling", "grammar": "Grammar",
           "reading": "Reading", "science": "Science", "space": "Space", "nature": "Nature & Animals",
           "senses": "Our Five Senses", "opinion": "Opinion Writing", "adjectives": "Adjectives",
-          "structures": "Animal Structures", "maps": "Maps", "fire-safety": "Fire Safety"
+          "structures": "Animal Structures", "maps": "Maps", "fire-safety": "Fire Safety", "story": "Story Parts"
         };
         window.__hhWonder = { space: SPACE_BANK, science: SCIENCE_BANK, nature: NATURE_BANK, plan: hazelPlan, make: makeHazelQuestion };
-        window.__hhSchool = { senses: SENSES_BANK, opinion: OPINION_BANK, adjectives: ADJECTIVE_BANK, structures: STRUCTURE_BANK, maps: MAP_BANK, fireSafety: FIRE_SAFETY_BANK };
+        window.__hhSchool = { senses: SENSES_BANK, opinion: OPINION_BANK, adjectives: ADJECTIVE_BANK, structures: STRUCTURE_BANK, maps: MAP_BANK, fireSafety: FIRE_SAFETY_BANK, story: STORY_PARTS_BANK };
         /* ---------- No-repeat question memory ----------
            Every served question gets a stable signature (its type plus its
            exact content: numbers, word, passage). Signatures are saved per
